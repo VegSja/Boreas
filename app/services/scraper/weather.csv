@@ -1,0 +1,3 @@
+latitude,longitude,elevation,time,region_id,region_name,temperature_2m_max,temperature_2m_min,temperature_2m_mean,rain_sum,snowfall_sum,windspeed_10m_max,windgusts_10m_max,winddirection_10m_dominant
+62.800003,9.199997,1024.0,2023-05-30,3022,Trollheimen,7.2,1.4,3.9,0.0,0.0,13.0,52.9,271
+62.800003,9.199997,1024.0,2023-05-31,3022,Trollheimen,4.3,0.3,2.3,2.5,0.21,15.0,65.2,294
