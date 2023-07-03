@@ -1,4 +1,3 @@
-from dataclasses import asdict
 from typing import List
 
 import pandas as pd
@@ -9,22 +8,54 @@ from app.services.scraper.data_classes.weather_data import WeatherData
 
 
 def write_avalanche_forecast_to_csv(forecasts: List[VarsomAvalancheResponse]) -> None:
+    """
+    Write avalanche forecasts to a CSV file.
+
+    Args:
+        forecasts: A list of VarsomAvalancheResponse
+         objects representing the avalanche forecasts.
+
+    Note:
+        The function appends the forecasts
+        to an existing CSV file named "avalanches.csv".
+        If the file doesn't exist, it will be created.
+
+    Returns:
+        None
+    """
+
     rows = []
     for forecast in forecasts:
         rows.append(forecast)
     df = pd.DataFrame(rows)
-    df.to_csv("avalanches.csv", index=False, mode='a', header=False)
+    df.to_csv("avalanches.csv", index=False, mode="a", header=False)
 
 
-def write_weather_forecast_to_csv(
-    forecasts: WeatherData, region: AvalancheRegion
-) -> None:
+def write_weather_forecast_to_csv(forecasts: WeatherData, region: AvalancheRegion) -> None:
+    """
+    Write weather forecasts to a CSV file.
+
+    Args:
+        forecasts: A WeatherData object
+        representing the weather forecasts.
+        region: An AvalancheRegion object
+        representing the region for which the forecasts are generated.
+
+    Note:
+        The function appends the forecasts
+         to an existing CSV file named "weather.csv".
+        If the file doesn't exist, it will be created.
+
+    Returns:
+        None
+    """
+
     latitude = forecasts.latitude
     longitude = forecasts.longitude
     elevation = forecasts.elevation
 
     rows = []
-    for i in range(len(forecasts.daily.time)):
+    for i in range(len(forecasts.daily.time)):  # pylint: disable=C0200
         forecast = forecasts.daily
         data = {
             "latitude": latitude,
@@ -45,4 +76,4 @@ def write_weather_forecast_to_csv(
         rows.append(data)
 
     df = pd.DataFrame(rows)
-    df.to_csv("weather.csv", index=False, mode='a', header=False)
+    df.to_csv("weather.csv", index=False, mode="a", header=False)

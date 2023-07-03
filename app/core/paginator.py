@@ -8,11 +8,11 @@ def pagenation(
     """
     if start_page_as_1:
         if page_number <= 0:
-            raise Exception(
-                "Page number must starts > 0.\nCause: start_page_as_1=True and page_number defined as <= 0"
+            raise ValueError(
+                "Page number must starts > 0.\n"
+                "Cause: start_page_as_1=True and page_number defined as <= 0"
             )
-        else:
-            page_number -= 1
+        page_number -= 1
     remaining = total_count % page_size
     total_pages = (
         total_count // page_size + 1 if remaining else total_count // page_size

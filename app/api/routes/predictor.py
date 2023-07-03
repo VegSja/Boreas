@@ -1,11 +1,10 @@
 import json
 
-import joblib
 from fastapi import APIRouter, HTTPException
 
-from core.config import INPUT_EXAMPLE
-from services.predict import MachineLearningModelHandlerScore as model
-from models.prediction import (
+from app.core.config import INPUT_EXAMPLE
+from app.services.predict import MachineLearningModelHandlerScore as model
+from app.models.prediction import (
     HealthResponse,
     MachineLearningResponse,
     MachineLearningDataInput,
@@ -14,10 +13,22 @@ from models.prediction import (
 router = APIRouter()
 
 
-## Change this portion for other types of models
-## Add the correct type hinting when completed
 def get_prediction(data_point):
-    return model.predict(data_point, load_wrapper=joblib.load, method="predict")
+    """
+    Perform a prediction based on the provided data input.
+
+    Args:
+        data_point (MachineLearningDataInput): The
+        input data for prediction.
+
+    Returns:
+        MachineLearningResponse: The prediction result.
+
+    Raises:
+        HTTPException: If the 'data_input' argument is invalid
+        or an exception occurs during prediction.
+    """
+    return model.predict(data_point, method="predict")
 
 
 @router.post(
@@ -26,6 +37,20 @@ def get_prediction(data_point):
     name="predict:get-data",
 )
 async def predict(data_input: MachineLearningDataInput):
+    """
+    Perform a prediction based on the provided data input.
+
+    Args:
+        data_input (MachineLearningDataInput):
+        The input data for prediction.
+
+    Returns:
+        MachineLearningResponse: The prediction result.
+
+    Raises:
+        HTTPException: If the 'data_input'
+        argument is invalid or an exception occurs during prediction.
+    """
     if not data_input:
         raise HTTPException(status_code=404, detail="'data_input' argument invalid!")
     try:
@@ -33,7 +58,7 @@ async def predict(data_input: MachineLearningDataInput):
         prediction = get_prediction(data_point)
 
     except Exception as err:
-        raise HTTPException(status_code=500, detail=f"Exception: {err}")
+        raise HTTPException(status_code=500, detail=f"Exception: {err}") from err
 
     return MachineLearningResponse(prediction=prediction)
 
@@ -44,14 +69,27 @@ async def predict(data_input: MachineLearningDataInput):
     name="health:get-data",
 )
 async def health():
+    """
+    Check the health status of the application.
+
+    Returns:
+        HealthResponse: The health status of the application.
+
+    Raises:
+        HTTPException: If an exception occurs while checking the health status.
+            The status code will be 404 if the application is unhealthy.
+    """
     is_health = False
     try:
         test_input = MachineLearningDataInput(
-            **json.loads(open(INPUT_EXAMPLE, "r").read())
+            **json.loads(open(  # pylint: disable=R1732
+                INPUT_EXAMPLE,
+                "r",
+                encoding="utf-8").read())
         )
         test_point = test_input.get_np_array()
         get_prediction(test_point)
         is_health = True
         return HealthResponse(status=is_health)
-    except Exception:
-        raise HTTPException(status_code=404, detail="Unhealthy")
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Unhealthy") from exc
