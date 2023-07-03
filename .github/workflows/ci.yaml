@@ -3,7 +3,7 @@ on: [push]
 
 env:
   py_source: "app"
-  py_tests: "test"
+  py_tests: "tests"
 
 jobs:
   Linting-And-Testing:
