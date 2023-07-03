@@ -1,24 +1,59 @@
-name: Python package
-
+name: Linting and testing
 on: [push]
 
-jobs:
-  build:
+env:
+  py_source: "app"
+  py_tests: "test"
 
+jobs:
+  Linting-And-Testing:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: checkout repo
+        uses: actions/checkout@v2.3.4
+
+      - name: Cache pip packages
+        uses: actions/cache@v2
         with:
-          python-version: ${{ matrix.python-version }}
+          path: $(Pipeline.Workspace)/.cache-pip
+          key: 'pip-${{ runner.os }}'
+          restore-keys: |
+            pip-${{ runner.os }}
+
+      - name: Cache Poetry venv
+        uses: actions/cache@v2
+        with:
+          path: $(Build.Repository.LocalPath)/.venv
+          key: 'poetry-venv-${{ runner.os }}-poetry.lock'
+          restore-keys: |
+            poetry-${{ runner.os }}
+
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
       - name: Install dependencies
-        run: |
-          make install
-      - name: Test with pytest
-        run: |
-          make test
+        run: poetry install
+
+      - name: Run poetry check
+        run: poetry check
+
+      - name: Run black check
+        run: poetry run python -m black --config ./pyproject.toml --check ${{github.workspace}}/${{ env.py_source }}
+
+      - name: Run flake8
+        run: poetry run flake8 --config ${{github.workspace}}/.flake8 ${{github.workspace}}/${{ env.py_source }}
+
+      - name: Run mypy
+        run: poetry run mypy --show-error-codes --show-error-context --pretty ${{github.workspace}}/${{ env.py_source }}
+
+      - name: Run pylint
+        run: poetry run pylint ${{github.workspace}}/${{ env.py_source }}
+
+      - name: Run tests
+        run: poetry run pytest --junitxml=test-results.xml --cov-config=.coveragerc --cov=${{github.workspace}}/${{ env.py_source }}
