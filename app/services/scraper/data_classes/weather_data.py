@@ -11,8 +11,8 @@ class WeatherData:
     timezone: str
     timezone_abbreviation: str
     elevation: float
-    daily: 'DailyData'
-    daily_units: 'DailyUnits'
+    daily: "DailyData"
+    daily_units: "DailyUnits"
 
 
 @dataclass

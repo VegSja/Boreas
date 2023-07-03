@@ -14,13 +14,15 @@ loguru = "^0.7.0"
 joblib = "^1.2.0"
 scikit-learn = "^1.2.0"
 pandas = "^2.0.3"
+pandas-stubs = "^2.0.2.230605"
+types-requests = "^2.31.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2"
-black = {version = "^19.10b0", allow-prereleases = true}
-autopep8 = "^2.0.0"
+black = {version = "^23.3.0", allow-prereleases = true}
 ipdb = "^0.13.0"
-pylint = "^2.15.8"
+mypy = "^1.4.1"
+pylint = "^2.17.4"
 
 [tool.poetry.group.aws]
 optional = true
@@ -44,5 +46,9 @@ exclude = '''
   |\.ini
   |Dockerfile
   |Jenkinfile
+  |venv
 )/
 '''
+
+[tool.pylint]
+disable= "logging-fstring-interpolation"
