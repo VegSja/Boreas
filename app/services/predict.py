@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 from loguru import logger
 
@@ -17,7 +18,7 @@ class MachineLearningModelHandlerScore:
     model = None
 
     @classmethod
-    def predict(cls, load_wrapper=None, method="predict"):
+    def predict(cls: Any, load_wrapper: Any = None, method: str = "predict") -> Any:
         """
         Make predictions using the machine learning model.
 
@@ -40,7 +41,7 @@ class MachineLearningModelHandlerScore:
         raise PredictException(f"'{method}' attribute is missing")
 
     @classmethod
-    def get_model(cls, load_wrapper):
+    def get_model(cls: Any, load_wrapper: Any) -> Any:
         """
         Get the machine learning model.
 
@@ -61,7 +62,7 @@ class MachineLearningModelHandlerScore:
         return cls.model
 
     @staticmethod
-    def load(load_wrapper):
+    def load(load_wrapper: Any) -> Any:
         """
         Load the machine learning model.
 

@@ -26,6 +26,7 @@ class InterceptHandler(logging.Handler):
             Emit the log record using the 'logger' object.
 
     """
+
     def emit(self, record: logging.LogRecord) -> None:  # pragma: no cover
         """
         Emit the log record using the 'logger' object.

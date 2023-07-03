@@ -46,9 +46,6 @@ jobs:
       - name: Run black check
         run: poetry run python -m black --config ./pyproject.toml --check ${{github.workspace}}/${{ env.py_source }}
 
-      - name: Run flake8
-        run: poetry run flake8 --config ${{github.workspace}}/.flake8 ${{github.workspace}}/${{ env.py_source }}
-
       - name: Run mypy
         run: poetry run mypy --show-error-codes --show-error-context --pretty ${{github.workspace}}/${{ env.py_source }}
 

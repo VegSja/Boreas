@@ -31,7 +31,9 @@ def write_avalanche_forecast_to_csv(forecasts: List[VarsomAvalancheResponse]) ->
     df.to_csv("avalanches.csv", index=False, mode="a", header=False)
 
 
-def write_weather_forecast_to_csv(forecasts: WeatherData, region: AvalancheRegion) -> None:
+def write_weather_forecast_to_csv(
+    forecasts: WeatherData, region: AvalancheRegion
+) -> None:
     """
     Write weather forecasts to a CSV file.
 

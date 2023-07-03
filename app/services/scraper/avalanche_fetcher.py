@@ -8,9 +8,7 @@ from app.services.scraper.data_classes.avalache_data import VarsomAvalancheRespo
 
 
 def get_avalanche_data(
-        region: AvalancheRegion,
-        start_date: str,
-        end_date: str
+    region: AvalancheRegion, start_date: str, end_date: str
 ) -> List[VarsomAvalancheResponse]:
     """
     Retrieve avalanche data from Varsom's
@@ -79,8 +77,10 @@ def generate_url(region_id: str, start_date: str, end_date: str) -> str:
     """
 
     language_key = "1"
-    url = f"https://api01.nve.no/" \
-          f"hydrology/forecast/avalanche/v6.2.1/api/" \
-          f"AvalancheWarningByRegion/Simple/" \
-          f"{region_id}/{language_key}/{start_date}/{end_date}"
+    url = (
+        f"https://api01.nve.no/"
+        f"hydrology/forecast/avalanche/v6.2.1/api/"
+        f"AvalancheWarningByRegion/Simple/"
+        f"{region_id}/{language_key}/{start_date}/{end_date}"
+    )
     return url

@@ -43,7 +43,7 @@ class DataFetcher:
         self.end_year: int = end_year
 
     def get_weather_data(
-            self, region: AvalancheRegion, start_date, end_date
+        self, region: AvalancheRegion, start_date: str, end_date: str
     ) -> WeatherData:
         """
         Retrieve weather data for a specific region and time range.
@@ -62,7 +62,7 @@ class DataFetcher:
         return get_weather_data(region, start_date, end_date)
 
     def get_avalanche_data_for_region(
-            self, region: AvalancheRegion, start_date, end_date
+        self, region: AvalancheRegion, start_date: str, end_date: str
     ) -> List[VarsomAvalancheResponse]:
         """
         Retrieve avalanche data for a specific region and time range.
@@ -99,7 +99,7 @@ class DataFetcher:
         write_avalanche_forecast_to_csv(warnings)
 
     def _save_weather_forecasts(
-            self, forecasts: WeatherData, region: AvalancheRegion
+        self, forecasts: WeatherData, region: AvalancheRegion
     ) -> None:
         """
         Save weather forecasts to a CSV file.

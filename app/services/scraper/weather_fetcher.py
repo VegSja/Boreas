@@ -62,7 +62,7 @@ def dict_to_weatherdata(parsed_data: Dict[str, Any]) -> WeatherData:
 
 
 def get_weather_data(
-        region: AvalancheRegion, start_date: str, end_date: str
+    region: AvalancheRegion, start_date: str, end_date: str
 ) -> WeatherData:
     """Retrieves weather data for a specific region, start date, and end date.
 
@@ -87,9 +87,7 @@ def get_weather_data(
         response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
     except RequestException as err:
-        raise RequestException(
-            f"The request for weather data failed: {err}"
-        ) from err
+        raise RequestException(f"The request for weather data failed: {err}") from err
 
     try:
         res: Dict[str, Any] = response.json()
@@ -102,7 +100,7 @@ def get_weather_data(
 
 
 def generate_url(
-        latitude: float, longitude: float, start_date: str, end_date: str
+    latitude: float, longitude: float, start_date: str, end_date: str
 ) -> str:
     """Generates a URL for retrieving weather data.
 
@@ -115,11 +113,13 @@ def generate_url(
     Returns:
         str: The generated URL for retrieving weather data.
     """
-    url = f"https://archive-api.open-meteo.com/v1/archive?latitude=" \
-          f"{latitude:.4f}&longitude={longitude:.4f}&" \
-          f"start_date={start_date}&" \
-          f"end_date={end_date}&" \
-          f"daily=weathercode,temperature_2m_max,temperature_2m_min,temperature_2m_mean" \
-          f",rain_sum,snowfall_sum,precipitation_hours,windspeed_10m_max,windgusts_10m_max" \
-          f",winddirection_10m_dominant&timezone=Europe%2FBerlin"
+    url = (
+        f"https://archive-api.open-meteo.com/v1/archive?latitude="
+        f"{latitude:.4f}&longitude={longitude:.4f}&"
+        f"start_date={start_date}&"
+        f"end_date={end_date}&"
+        f"daily=weathercode,temperature_2m_max,temperature_2m_min,temperature_2m_mean"
+        f",rain_sum,snowfall_sum,precipitation_hours,windspeed_10m_max,windgusts_10m_max"
+        f",winddirection_10m_dominant&timezone=Europe%2FBerlin"
+    )
     return url

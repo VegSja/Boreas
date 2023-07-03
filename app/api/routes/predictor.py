@@ -82,10 +82,11 @@ async def health():
     is_health = False
     try:
         test_input = MachineLearningDataInput(
-            **json.loads(open(  # pylint: disable=R1732
-                INPUT_EXAMPLE,
-                "r",
-                encoding="utf-8").read())
+            **json.loads(
+                open(  # pylint: disable=R1732
+                    INPUT_EXAMPLE, "r", encoding="utf-8"
+                ).read()
+            )
         )
         test_point = test_input.get_np_array()
         get_prediction(test_point)
