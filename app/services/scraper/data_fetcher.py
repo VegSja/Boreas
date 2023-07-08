@@ -143,7 +143,7 @@ class DataFetcher:
                 "MainText",
                 "LangKey",
             ],
-        ).to_csv("avalanches.csv", index=False)
+        ).to_csv("../../../notebooks/data/avalanches.csv", index=False)
         pd.DataFrame(
             columns=[
                 "latitude",
@@ -161,7 +161,7 @@ class DataFetcher:
                 "windgusts_10m_max",
                 "winddirection_10m_dominant",
             ],
-        ).to_csv("weather.csv", index=False)
+        ).to_csv("../../../notebooks/data/weather.csv", index=False)
 
         for year in range(self.start_year, self.end_year):
             start_date = f"{year}-01-01"
