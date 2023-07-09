@@ -1,6 +1,7 @@
 from typing import List
 
 import pandas as pd
+from tqdm import tqdm
 
 from app.services.scraper.Constants.avalanche_regions import (
     AvalancheRegion,
@@ -163,10 +164,10 @@ class DataFetcher:
             ],
         ).to_csv("../../../notebooks/data/weather.csv", index=False)
 
-        for year in range(self.start_year, self.end_year):
+        for year in tqdm(range(self.start_year, self.end_year)):
             start_date = f"{year}-01-01"
             end_date = f"{year}-12-31"
-            for region in AVALANCHE_REGIONS:
+            for region in tqdm(AVALANCHE_REGIONS):
                 print(f"Region: {region}")
                 print("Fetching avalanches...")
                 avalanches = self.get_avalanche_data_for_region(
