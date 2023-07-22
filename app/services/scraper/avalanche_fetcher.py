@@ -3,8 +3,8 @@ import requests
 
 from requests import RequestException
 
-from app.services.scraper.Constants.avalanche_regions import AvalancheRegion
-from app.services.scraper.data_classes.avalache_data import VarsomAvalancheResponse
+from Constants.avalanche_regions import AvalancheRegion
+from data_classes.avalache_data import VarsomAvalancheResponse
 
 
 def get_avalanche_data(
@@ -21,7 +21,7 @@ def get_avalanche_data(
         the start date of the time range in the format "YYYY-MM-DD".
         end_date: A string representing the end
          date of the time range in the format "YYYY-MM-DD".
-
+services.scraper.
     Returns:
         A list of VarsomAvalancheResponse objects
          representing the retrieved avalanche warnings.
@@ -36,7 +36,8 @@ def get_avalanche_data(
     url = generate_url(region.region_id, start_date, end_date)
     print("Using url: " + url)
 
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    headers = {"Content-Type": "application/json",
+               "Accept": "application/json"}
 
     response = requests.get(url, headers=headers, timeout=60 * 10)
 
@@ -84,3 +85,6 @@ def generate_url(region_id: str, start_date: str, end_date: str) -> str:
         f"{region_id}/{language_key}/{start_date}/{end_date}"
     )
     return url
+
+
+print("Hello")

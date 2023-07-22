@@ -3,18 +3,18 @@ from typing import List
 import pandas as pd
 from tqdm import tqdm
 
-from app.services.scraper.Constants.avalanche_regions import (
+from Constants.avalanche_regions import (
     AvalancheRegion,
     AVALANCHE_REGIONS,
 )
-from app.services.scraper.avalanche_fetcher import get_avalanche_data
-from app.services.scraper.csv_writer import (
+from avalanche_fetcher import get_avalanche_data
+from csv_writer import (
     write_avalanche_forecast_to_csv,
     write_weather_forecast_to_csv,
 )
-from app.services.scraper.data_classes.avalache_data import VarsomAvalancheResponse
-from app.services.scraper.data_classes.weather_data import WeatherData
-from app.services.scraper.weather_fetcher import get_weather_data
+from data_classes.avalache_data import VarsomAvalancheResponse
+from data_classes.weather_data import WeatherData
+from weather_fetcher import get_weather_data
 
 
 class DataFetcher:
@@ -84,7 +84,7 @@ class DataFetcher:
             region=region, start_date=start_date, end_date=end_date
         )
 
-    def _save_avalanche_warnings(self, warnings: List[VarsomAvalancheResponse]) -> None:
+    def _save_avalanche_warnings(seLf, warnings: List[VarsomAvalancheResponse]) -> None:
         """
         Save avalanche warnings to a CSV file.
 
@@ -181,7 +181,3 @@ class DataFetcher:
                 )
                 print("Saving weather...")
                 self._save_weather_forecasts(forecasts=weather, region=region)
-
-
-fetcher = DataFetcher(start_year=2018, end_year=2022)
-fetcher.get_data_and_save()

@@ -3,8 +3,8 @@ import requests
 from requests.exceptions import RequestException
 
 
-from app.services.scraper.Constants.avalanche_regions import AvalancheRegion
-from app.services.scraper.data_classes.weather_data import (
+from Constants.avalanche_regions import AvalancheRegion
+from data_classes.weather_data import (
     WeatherData,
     DailyData,
     DailyUnits,
@@ -16,6 +16,7 @@ def from_nested_dict(dict_input: Dict[str, Any]) -> Any:
      appropriate data structure based on the "__type__" field.
 
     Args:
+
         dict_input (Dict[str, Any]): The input dictionary to be converted.
 
     Returns:
@@ -33,6 +34,9 @@ def from_nested_dict(dict_input: Dict[str, Any]) -> Any:
         if type_name == "DailyUnits":
             return DailyUnits(**dict_input)
     return dict_input
+
+
+from_nested_dict("hello")
 
 
 def dict_to_weatherdata(parsed_data: Dict[str, Any]) -> WeatherData:

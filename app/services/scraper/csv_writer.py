@@ -2,9 +2,9 @@ from typing import List
 
 import pandas as pd
 
-from app.services.scraper.Constants.avalanche_regions import AvalancheRegion
-from app.services.scraper.data_classes.avalache_data import VarsomAvalancheResponse
-from app.services.scraper.data_classes.weather_data import WeatherData
+from Constants.avalanche_regions import AvalancheRegion
+from data_classes.avalache_data import VarsomAvalancheResponse
+from data_classes.weather_data import WeatherData
 
 
 def write_avalanche_forecast_to_csv(forecasts: List[VarsomAvalancheResponse]) -> None:
