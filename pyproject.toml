@@ -56,3 +56,4 @@ exclude = '''
 
 [tool.pylint]
 disable= "logging-fstring-interpolation"
+line-length = 88

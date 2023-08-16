@@ -10,6 +10,7 @@ logging-modules=logging
 
 [BASIC]
 good-names = df, i, j, k, ex
+line-length = 88
 
 [MASTER]
 disable=
