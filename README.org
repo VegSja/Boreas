@@ -181,4 +181,3 @@ Deploying inference service to AWS Lambda
 
 ** Further Reading
 For more information on the EDA process. Consult [[file:notebooks/README.org][this README]]
-
