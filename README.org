@@ -180,5 +180,5 @@ Deploying inference service to AWS Lambda
 =aws cloudformation delete-stack --stack-name <STACK_NAME_ON_CREATION>=
 
 ** Further Reading
-For more information on the EDA process. Consult [[this readme][./notebooks/README.org ]]
+For more information on the EDA process. Consult [[file:notebooks/README.org][this README]]
 
