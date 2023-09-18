@@ -1,0 +1,8 @@
+#+title: Ideas
+
+* Notebooks
+This folder contains the notebooks used for exploratory data analysis in Boreas. In addition the notebooks contains testing of different sorts of models to make it clear which model is to be used by Boreas. The notebooks contain some explaination on the thinking process, but they are mainly now kept as notes to self when continuing the exploration.
+
+The *models* folder contains saved models. Currently this contains the RNN model, as this is the model showing the best performance.
+
+The *data* folder holds the dataset used for the EDA. This is a snapshot of the database intended to be used in the application.

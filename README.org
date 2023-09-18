@@ -1,8 +1,15 @@
+[[https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white][file:https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white]]
+[[https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white][file:https://img.shields.io/badge/mysql-%2300f.svg?style=for-the-badge&logo=mysql&logoColor=white]]
+[[https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi][file:https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi]]
+[[https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white][file:https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white]]
+[[keras][file:https://img.shields.io/badge/Keras-%23D00000.svg?style=for-the-badge&logo=Keras&logoColor=white]]
+[[https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white][file:https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white]]
+
 * Boreas
 :PROPERTIES:
 :CUSTOM_ID: boreas
 :END:
-Avalanche level prediction API
+Boreas is an full stack application in the works meant to serve automated avalanche danger levels on a daily bases. Currently the development is focused on giving insights into the avalanche levels in Norway.
 
 ** Development Requirements
 :PROPERTIES:
@@ -21,12 +28,6 @@ MODEL_PATH=./ml/model/
 MODEL_NAME=model.pkl
 #+end_src
 
-*** Update =/predict=
-:PROPERTIES:
-:CUSTOM_ID: update-predict
-:END:
-To update your machine learning model, add your =load= and =method=
-[[file:app/api/routes/predictor.py#L19][change here]] at =predictor.py=
 
 ** Installation
 :PROPERTIES:
