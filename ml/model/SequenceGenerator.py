@@ -12,9 +12,10 @@ class SequenceGenerator:
         df = df.drop(columns=["region_name"])
         return df
 
-    def extract_recent_sequence(self, df, region_id):
+    def build_recent_sequence(self, df, region_id):
         # Filter the DataFrame for the specified region
         region_data = df[df['region_id'] == region_id].copy()
+        region_data = self.build_sequences(region_data)
         
         # Check if the size of the region_data is smaller than telescope
         if len(region_data) < self.telescope:
