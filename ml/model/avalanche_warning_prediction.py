@@ -22,50 +22,7 @@ class AvalancheWarningPrediction:
         model_path : str
             Path to the model to load. If None, a new model is built.
         """
-        if model_path is None:
-            self._model = self.build_model()
-        else:
-            self._model = self.load_model(model_path)
-
-    def build_model(self, num_outputs: int = 4, input_shape: tuple = (7, 11)):
-        """
-        Build a LSTM model for avalanche warning prediction.
-
-        Parameters
-        ----------
-        num_outputs : int, optional
-            Number of outputs of the model, by default 4
-        input_shape : tuple, optional
-            Shape of the input data, by default (7, 11)
-
-        Returns
-        -------
-        tf.keras.Sequential
-            A sequential model with the following layers:
-            - LSTM layer with 64 units and return_sequences=True
-            - LSTM layer with 32 units and return_sequences=False
-            - Dense layer with num_outputs units and softmax activation
-            - Reshape layer to reshape the output to (None, 1, num_outputs)
-        """
-        logging.debug(
-            "Bulding avalanche prediction model"
-            / "with the following parameters:"
-            / f"Number of outputs: {num_outputs}, Input shape: {input_shape}",
-        )
-        model = tf.keras.Sequential(
-            [
-                tf.keras.layers.LSTM(
-                    64, return_sequences=True, input_shape=input_shape
-                ),
-                tf.keras.layers.LSTM(32, return_sequences=False),
-                tf.keras.layers.Dense(units=num_outputs, activation="softmax"),
-                tf.keras.layers.Reshape(
-                    (1, num_outputs)
-                ),  # Reshape the output to (None, 1, output_shape)
-            ]
-        )
-
-        return model
+        self._model = self.load_model(model_path)
 
     def train_model(
         self,
@@ -127,7 +84,15 @@ class AvalancheWarningPrediction:
         model = tf.keras.models.load_model(model_path)
         return model
 
-    def predict(self, data: pd.DataFrame):
+    def prepare_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        features = ['temp_2m_max', 'temp_2m_min', 'temp_2m_mean', 'rain_sum',
+               'snowfall_sum', 'windspeed_10m_max', 'windgusts_10m_max',
+               'winddirection_10m_dominant']
+        target = "SequenceDangerLevel"
+        data = data[features]
+        return data
+
+    def predict(self, sequence: pd.DataFrame):
         """
         Predict the avalanche warning for a given data.
 
@@ -143,8 +108,8 @@ class AvalancheWarningPrediction:
         np.array
             Prediction probabilities
         """
-        logging.debug(f"Predicting avalanche warning for {data}")
-        prediction = self.model.predict(data)
-        predicted_labels = np.argmax(prediction[:, 0], axis=-1)
-        prediction_probabilities = np.max(prediction[:, 0], axis=-1)
+        logging.debug(f"Predicting avalanche warning for sequence")
+        prediction = self._model.predict(sequence.values.reshape(1, 15, 8))
+        predicted_labels = np.argmax(prediction[0], axis=-1) + 1
+        prediction_probabilities = prediction[0]
         return predicted_labels, prediction_probabilities
