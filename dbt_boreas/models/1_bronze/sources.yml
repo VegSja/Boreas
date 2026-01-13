@@ -1,0 +1,7 @@
+version: 2
+
+sources:
+  - name: 1_bronze
+    schema: 1_bronze
+    tables:
+      - name: raw_weather

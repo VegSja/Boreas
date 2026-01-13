@@ -1,0 +1,22 @@
+name: "dbt_boreas"
+version: "1.0.0"
+config-version: 2
+
+profile: "dbt_boreas"
+
+seed-paths: ["seeds"]
+model-paths: ["models"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  dbt_w:
+    1_bronze:
+      +materialized: table
+      +schema: 1_bronze
+    2_silver:
+      +materialized: table
+      +schema: 2_silver

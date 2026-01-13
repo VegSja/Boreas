@@ -1,0 +1,14 @@
+[project]
+name = "boreas-dataplattform"
+version = "0.1.0"
+description = "The dataplatform for the avalanche dataplatform Boreas"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-core>=1.11.2",
+    "dbt-duckdb>=1.10.0",
+    "dlt[duckdb,workspace]>=1.20.0",
+    "duckdb>=1.4.3",
+    "pandas>=2.3.3",
+    "requests>=2.32.5",
+]

@@ -1,0 +1,7 @@
+dbt_boreas:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../boreas.duckdb
+      schema: 1_bronze
