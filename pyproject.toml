@@ -5,11 +5,11 @@ description = "The dataplatform for the avalanche dataplatform Boreas"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "alive-progress>=3.3.0",
     "dbt-core>=1.11.2",
     "dbt-duckdb>=1.10.0",
     "dlt[duckdb,workspace]>=1.20.0",
     "duckdb>=1.4.3",
-    "enlighten>=1.14.1",
     "pandas>=2.3.3",
     "requests>=2.32.5",
 ]

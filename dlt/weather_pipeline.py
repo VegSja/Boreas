@@ -106,7 +106,7 @@ if __name__ == "__main__":
             enable_dataset_name_normalization=False
         ),
         dataset_name="1_bronze",
-        progress='enlighten'
+        progress='alive_progress'
     )
     
     pipeline.run([weather_historic_source(), weather_forecast_source()])
