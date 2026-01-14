@@ -16,9 +16,9 @@ def avalanche_warning_source():
             @dlt.resource(
                 table_name="avalanche_danger_levels",
                 write_disposition="replace",
-                primary_key=['RegId'],
+                primary_key=['RegId', 'ValidFrom', 'ValidTo'],
                 name=f'avalanche_warning_{r.region_id}',
-                schema_contract={"tables": "evolve", "columns": "freeze", "data_type": "freeze"}
+                schema_contract={"tables": "evolve", "columns": "evolve", "data_type": "freeze"}
             )
             def avalanche_warning_resource(
             ) -> Iterator[Dict[str, Any]]:
