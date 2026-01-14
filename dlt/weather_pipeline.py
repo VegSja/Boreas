@@ -1,4 +1,3 @@
-from alive_progress import alive_bar
 import dlt
 from dlt.sources.helpers import requests
 from datetime import datetime, date, timezone

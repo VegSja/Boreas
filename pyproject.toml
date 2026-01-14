@@ -9,9 +9,14 @@ dependencies = [
     "dbt-duckdb>=1.10.0",
     "dlt[duckdb,workspace]>=1.20.0",
     "duckdb>=1.4.3",
+    "enlighten>=1.14.1",
     "pandas>=2.3.3",
     "requests>=2.32.5",
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]
