@@ -6,7 +6,7 @@ from sources.avalanche.avalache_warnings import avalanche_warning_source
 def create_avalanche_pipeline():
     # Get absolute path to project root (two levels up from this file)
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    db_path = os.path.join(project_root, 'boreas.duckdb')
+    db_path = os.path.join(project_root, 'boreas')
     
     pipeline = dlt.pipeline(
         pipeline_name="avalanche_pipeline",

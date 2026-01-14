@@ -8,7 +8,7 @@ def create_weather_pipeline():
     """Create and configure the weather data pipeline."""
     # Get absolute path to project root (two levels up from this file)
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    db_path = os.path.join(project_root, 'boreas.duckdb')
+    db_path = os.path.join(project_root, 'boreas')
     
     pipeline = dlt.pipeline(
         pipeline_name="weather_pipeline",
