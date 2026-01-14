@@ -6,7 +6,7 @@ from typing import Iterator, Dict, Any
 from src.config.regions import AVALANCHE_REGIONS
 from src.models.regions import AvalancheRegion
 
-START_DATE = "2026-01-10:T00:00"
+START_DATE = "2026-01-10T00:00"
 HOURLY_PARAMS = [
     "temperature_2m",
     "relative_humidity_2m", 
@@ -18,7 +18,6 @@ TIMEZONE = "Europe/Oslo"
 
 def fetch_weather_data(url: str, params: Dict[str, Any], region: AvalancheRegion) -> Iterator[Dict[str, Any]]:
     """Fetch and process weather data from Open Meteo API."""
-    print(f"Fetching data for {region.name}...")
 
     response = requests.get(url, params=params, timeout=30)
     response.raise_for_status()
@@ -64,7 +63,7 @@ def weather_historic_source():
                 try: 
                     yield from fetch_weather_data("https://archive-api.open-meteo.com/v1/archive", params, region=r)
                 except Exception as e:
-                    print(f"Failed to fetch data fro {r.name}: {e}")
+                    print(f"Failed to fetch data for {r.name}: {e}")
             return get_historic_data
         resources.append(make_historic_resource())
     return resources
@@ -76,7 +75,7 @@ def weather_forecast_source():
         def make_forecast_resource(r=region):
             @dlt.resource(
                 table_name="weather_forecast",
-                write_disposition="merge",
+                write_disposition="replace",
                 primary_key=['time', 'region_id'],
                 name=f'forecast_{r.region_id}'
             )
@@ -92,7 +91,7 @@ def weather_forecast_source():
                 try:
                     yield from fetch_weather_data("https://api.open-meteo.com/v1/forecast", params, region=r)
                 except Exception as e:
-                    print(f"Failed to fetch data fro {r.name}: {e}")
+                    print(f"Failed to fetch data for {r.name}: {e}")
             return get_forecast_data
         resources.append(make_forecast_resource())
     return resources
@@ -110,9 +109,4 @@ if __name__ == "__main__":
         progress='enlighten'
     )
     
-    load_info = pipeline.run([weather_historic_source(), weather_forecast_source()])
-    row_counts = pipeline.last_trace.last_normalize_info
-    
-    print(row_counts)
-    print("--------")  
-    print(load_info)
+    pipeline.run([weather_historic_source(), weather_forecast_source()])
