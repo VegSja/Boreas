@@ -1,6 +1,25 @@
 # put your configuration values here
 
 [runtime]
-log_level="WARNING"  # the system log level of dlt
+log_level="ERROR"  # the system log level of dlt
 # use the dlthub_telemetry setting to enable/disable anonymous usage data reporting, see https://dlthub.com/docs/reference/telemetry
 dlthub_telemetry = true
+
+[sources.weather_historic.weather_historic_source]
+start_date = "2026-01-10T00:00"
+hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
+timezone = "Europe/Oslo"
+archive_api_base_url = "https://archive-api.open-meteo.com/v1"
+request_timeout = 30
+
+[sources.weather_forecast.weather_forecast_source]
+hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
+timezone = "Europe/Oslo"
+api_base_url = "https://api.open-meteo.com/v1"
+request_timeout = 30
+
+[sources.avalanche_warnings.avalanche_warning_source]
+start_date = "2026-01-10T00:00"
+language_key = "1"
+api_base_url = "https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api"
+request_timeout = 30

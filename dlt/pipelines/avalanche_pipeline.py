@@ -1,6 +1,6 @@
 import dlt
 import os
-from sources.avalanche.avalache_warnings import avalanche_warning_source
+from sources.avalanche.avalanche_warnings import avalanche_warning_source
 
 
 def create_avalanche_pipeline():
