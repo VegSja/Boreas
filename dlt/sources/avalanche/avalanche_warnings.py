@@ -31,6 +31,8 @@ def avalanche_warning_source(
     resources = []
     for region in AVALANCHE_REGIONS:
         def make_avalanche_warning_resource(r: AvalancheRegion = region):
+
+            # TODO: Make incremental
             @dlt.resource(
                 table_name="avalanche_danger_levels",
                 write_disposition="replace",
