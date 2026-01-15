@@ -16,6 +16,14 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[project.optional-dependencies]
+dashboard = [
+    "streamlit>=1.28.0",
+    "plotly>=5.17.0",
+    "folium>=0.15.0",
+    "streamlit-folium>=0.15.0",
+]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*"]
