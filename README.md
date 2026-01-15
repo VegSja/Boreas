@@ -2,7 +2,7 @@
 
 Boreas is a comprehensive data platform that collects, processes, and visualizes avalanche danger and weather data from Norwegian regions. The platform combines data from multiple sources to provide insights into avalanche conditions and weather patterns.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 The platform consists of four main components:
 
@@ -11,19 +11,19 @@ The platform consists of four main components:
 - **`dashboard/`** - Interactive Streamlit dashboard for data visualization
 - **`src/`** - Shared configuration and data models
 
-## 📊 Data Flow
+## Data Flow
 
 1. **Extract** - DLT pipelines fetch data from external APIs
 2. **Load** - Raw data is stored in DuckDB (Bronze layer)
 3. **Transform** - dbt models clean and aggregate data (Silver/Gold layers)
 4. **Visualize** - Streamlit dashboard displays processed data
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.12+
-- pip or conda package manager
+- [uv](https://docs.astral.sh/uv/) package manager
 
 ### Installation
 
@@ -33,10 +33,10 @@ git clone <repository-url>
 cd Boreas
 
 # Install dependencies
-pip install -e .
+uv sync
 
 # Install dashboard dependencies (optional)
-pip install -e .[dashboard]
+uv sync --extra dashboard
 ```
 
 ### Running the Data Pipeline
@@ -45,24 +45,24 @@ pip install -e .[dashboard]
 2. **Run data ingestion**:
    ```bash
    cd dlt
-   python run_dlt_pipelines.py
+   uv run python run_dlt_pipelines.py
    ```
 3. **Run dbt transformations**:
    ```bash
    cd dbt_boreas
-   dbt run
+   uv run dbt run
    ```
 
 ### Launching the Dashboard
 
 ```bash
 cd dashboard
-streamlit run app.py
+uv run streamlit run app.py
 ```
 
 The dashboard will be available at `http://localhost:8501`
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Boreas/
@@ -83,7 +83,7 @@ Boreas/
 └── logs/                  # Application logs
 ```
 
-## 🗃️ Data Sources
+## Data Sources
 
 ### Avalanche Data
 - **Source**: Norwegian Avalanche Warning Service API
@@ -100,18 +100,7 @@ Boreas/
 - **Content**: 23 Norwegian avalanche regions with geographic boundaries
 - **Coverage**: From Svalbard to Rogaland
 
-## 🏃‍♂️ Development
-
-### Running Tests
-```bash
-# Add test commands when available
-```
-
-### Code Style
-The project follows standard Python conventions. Run linting tools:
-```bash
-# Add linting commands when available
-```
+## Development
 
 ### Adding New Data Sources
 1. Create source implementation in `dlt/sources/`
@@ -139,22 +128,3 @@ The project follows standard Python conventions. Run linting tools:
 ### Dashboard Configuration
 - Streamlit settings in `.streamlit/config.toml`
 - Database path configuration in dashboard code
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under [LICENSE] - see the LICENSE file for details.
-
-## 🆘 Support
-
-For questions and support:
-- Create an issue in the repository
-- Check the documentation in individual component folders
-- Review the logs in the `logs/` directory for troubleshooting

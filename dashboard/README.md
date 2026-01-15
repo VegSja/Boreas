@@ -2,10 +2,11 @@
 
 Interactive Streamlit dashboard for visualizing avalanche danger and weather data from Norwegian regions.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.12+
+- [uv](https://docs.astral.sh/uv/) package manager
 - Completed data pipeline (DLT + dbt)
 - DuckDB database with processed data
 
@@ -13,22 +14,22 @@ Interactive Streamlit dashboard for visualizing avalanche danger and weather dat
 
 1. **Install dashboard dependencies**:
 ```bash
-pip install -e .[dashboard]
+uv sync --extra dashboard
 ```
 
 2. **Ensure data is available**:
-   - Run the DLT pipelines: `cd dlt && python run_dlt_pipelines.py`
-   - Run dbt transformations: `cd dbt_boreas && dbt run`
+   - Run the DLT pipelines: `cd dlt && uv run python run_dlt_pipelines.py`
+   - Run dbt transformations: `cd dbt_boreas && uv run dbt run`
 
 3. **Launch the dashboard**:
 ```bash
 cd dashboard
-streamlit run app.py
+uv run streamlit run app.py
 ```
 
 The dashboard will be available at `http://localhost:8501`
 
-## 📊 Features
+## Features
 
 ### Interactive Map
 - **Regional Visualization**: Color-coded squares showing avalanche danger levels
@@ -50,13 +51,13 @@ The dashboard will be available at `http://localhost:8501`
 - **Precipitation Data**: Rainfall and snowfall information
 - **Wind Conditions**: Speed and weather type indicators
 
-## 🗃️ Data Sources
+## Data Sources
 
 The dashboard reads from the gold layer models:
 - **Primary**: `3_gold.avalanche_average_weather_per_region`
 - **Database**: `./boreas.duckdb` (DuckDB)
 
-## ⚙️ Configuration
+## Configuration
 
 ### Streamlit Settings
 Configuration is managed in `.streamlit/config.toml`:
@@ -69,7 +70,7 @@ Configuration is managed in `.streamlit/config.toml`:
 - **Mode**: Read-only for dashboard safety
 - **Caching**: 5-minute cache for data queries, 1-hour cache for coordinates
 
-## 🎯 Usage Tips
+## Usage Tips
 
 ### Navigation
 1. **Filters Panel**: Use the sidebar to customize data views
@@ -77,17 +78,8 @@ Configuration is managed in `.streamlit/config.toml`:
 3. **Date Controls**: Separate date pickers for map and heatmap views
 4. **Auto-refresh**: Data updates automatically based on filter changes
 
-### Performance
-- Data is cached for faster loading
-- Large date ranges may take longer to process
-- Map rendering optimizes based on available data
 
-### Troubleshooting
-- **No Data**: Ensure dbt models have been run successfully
-- **Slow Loading**: Check database file size and clear browser cache
-- **Map Issues**: Verify regional coordinate data is complete
-
-## 📁 File Structure
+## File Structure
 
 ```
 dashboard/
@@ -96,24 +88,3 @@ dashboard/
 └── .streamlit/
     └── config.toml     # Streamlit configuration
 ```
-
-## 🔧 Development
-
-### Adding New Features
-1. Modify `app.py` for new visualizations
-2. Update caching strategies for performance
-3. Test with different data ranges and regions
-
-### Custom Visualizations
-- Use Plotly for interactive charts
-- Leverage DuckDB for efficient data queries
-- Implement proper error handling for missing data
-
-## 📈 Data Schema
-
-Expected data structure from `3_gold.avalanche_average_weather_per_region`:
-- `date`: Date of observation
-- `region_id`, `region_name`: Regional identifiers
-- `danger_level`: Avalanche danger (1-5)
-- `*_temp`, `*_precipitation`, `*_windspeed`: Weather metrics
-- `*_lat`, `*_lon`: Geographic boundaries
