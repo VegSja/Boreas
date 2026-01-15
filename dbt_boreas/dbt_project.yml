@@ -22,4 +22,4 @@ models:
       +schema: 2_silver
     3_gold:
       +materialized: table
-      +schema: 2_gold
+      +schema: 3_gold

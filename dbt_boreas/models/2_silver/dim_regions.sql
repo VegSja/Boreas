@@ -15,5 +15,7 @@ SELECT
     east_south_lon,
     east_south_lat,
     west_north_lon,
-    west_north_lat
+    west_north_lat,
+    center_lat,
+    center_lon
 FROM raw_regions
