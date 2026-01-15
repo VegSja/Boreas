@@ -3,7 +3,8 @@ import duckdb
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+import numpy as np
+from datetime import datetime, timedelta, date
 
 # Configure page
 st.set_page_config(
@@ -18,201 +19,325 @@ def get_db_connection():
     return duckdb.connect("./boreas.duckdb", read_only=True)
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
-def load_weather_data():
+def load_avalanche_weather_data():
     conn = get_db_connection()
     query = """
     SELECT 
-        time,
-        temperature_2m,
-        relative_humidity_2m,
-        precipitation,
-        windspeed_10m,
+        date,
+        registration_id,
         region_id,
+        region_name,
+        danger_level,
+        valid_from,
+        valid_to,
+        main_text,
+        east_south_lon,
+        east_south_lat,
+        west_north_lon,
+        west_north_lat,
+        max_temp,
+        min_temp,
+        max_relative_humidity,
+        min_relative_humidity,
+        max_precipitation,
+        min_precipitation,
+        max_windspeed,
+        min_windspeed,
         weather_type
-    FROM "2_silver".fact_weather
-    ORDER BY time DESC
-    LIMIT 10000
+    FROM "3_gold"."avalanche_average_weather_per_region"
+    WHERE date IS NOT NULL
+    ORDER BY date DESC, region_name
     """
     return conn.execute(query).df()
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
-def load_regions_data():
-    regions = [
-        {"region_id": "3003", "name": "Nordenskiöld Land", "lat": 77.9, "lon": 15.75},
-        {"region_id": "3006", "name": "Finnmarkskysten", "lat": 70.8, "lon": 27.0},
-        {"region_id": "3007", "name": "Vest-Finnmark", "lat": 69.9, "lon": 22.0},
-        {"region_id": "3009", "name": "Nord-Troms", "lat": 70.3, "lon": 21.25},
-        {"region_id": "3010", "name": "Lyngen", "lat": 69.65, "lon": 20.25},
-        {"region_id": "3011", "name": "Tromsø", "lat": 69.5, "lon": 19.0},
-        {"region_id": "3012", "name": "Sør-Troms", "lat": 69.1, "lon": 19.0},
-        {"region_id": "3013", "name": "Indre Troms", "lat": 68.85, "lon": 20.0},
-        {"region_id": "3014", "name": "Lofoten og Vesterålen", "lat": 68.35, "lon": 13.75},
-        {"region_id": "3015", "name": "Ofoten", "lat": 68.2, "lon": 17.0},
-        {"region_id": "3016", "name": "Salten", "lat": 67.3, "lon": 15.0},
-        {"region_id": "3017", "name": "Svartisen", "lat": 66.6, "lon": 14.25},
-        {"region_id": "3018", "name": "Helgeland", "lat": 65.85, "lon": 13.5},
-        {"region_id": "3022", "name": "Trollheimen", "lat": 62.78, "lon": 9.19},
-        {"region_id": "3023", "name": "Romsdal", "lat": 62.4, "lon": 7.5},
-        {"region_id": "3024", "name": "Sunnmøre", "lat": 62.1, "lon": 6.75},
-        {"region_id": "3026", "name": "Indre Fjordane", "lat": 61.3, "lon": 6.75},
-        {"region_id": "3028", "name": "Jotunheimen", "lat": 61.5, "lon": 8.25},
-        {"region_id": "3029", "name": "Indre Sogn", "lat": 61.0, "lon": 7.5},
-        {"region_id": "3031", "name": "Voss", "lat": 60.5, "lon": 6.75},
-        {"region_id": "3032", "name": "Hallingdal", "lat": 60.6, "lon": 8.75},
-        {"region_id": "3034", "name": "Hardanger", "lat": 60.3, "lon": 7.0},
-        {"region_id": "3035", "name": "Vest-Telemark", "lat": 59.4, "lon": 8.0},
-        {"region_id": "3037", "name": "Heiane", "lat": 59.55, "lon": 5.75}
-    ]
-    return pd.DataFrame(regions)
+def create_grid_coordinates(data):
+    """Create grid coordinates for map visualization"""
+    grid_data = []
+    
+    try:
+        for _, row in data.iterrows():
+            if pd.notna(row['east_south_lon']) and pd.notna(row['west_north_lon']):
+                # Create a 3x3 grid within each region's bounds
+                lon_range = np.linspace(row['west_north_lon'], row['east_south_lon'], 3)
+                lat_range = np.linspace(row['east_south_lat'], row['west_north_lat'], 3)
+                
+                for lon in lon_range:
+                    for lat in lat_range:
+                        grid_point = row.copy()
+                        grid_point['grid_lon'] = lon
+                        grid_point['grid_lat'] = lat
+                        # Ensure danger_level is numeric
+                        if pd.notna(grid_point['danger_level']):
+                            grid_point['danger_level'] = float(grid_point['danger_level'])
+                        grid_data.append(grid_point)
+        
+        return pd.DataFrame(grid_data)
+    except Exception as e:
+        st.sidebar.write(f"Grid creation error: {e}")
+        return pd.DataFrame()  # Return empty dataframe on error
 
 def main():
-    st.title("🌨️ Boreas Weather Dashboard")
-    st.markdown("Real-time weather data from Norwegian avalanche regions")
+    st.title("🌨️ Boreas Avalanche & Weather Dashboard")
+    st.markdown("Integrated avalanche danger and weather data from Norwegian regions")
     
     # Load data
     try:
-        weather_df = load_weather_data()
-        regions_df = load_regions_data()
+        data_df = load_avalanche_weather_data()
         
-        # Merge weather data with region coordinates
-        merged_df = weather_df.merge(regions_df, on='region_id', how='left')
+        if data_df.empty:
+            st.warning("No data available. Make sure the dbt models have been run.")
+            return
+        
+        # Data type conversions and cleaning
+        try:
+            # Convert date column to date type if it's datetime
+            if data_df['date'].dtype.name.startswith('datetime'):
+                data_df['date'] = data_df['date'].dt.date
+            
+            # Convert danger_level to numeric, handling any string issues
+            if data_df['danger_level'].dtype == 'object':
+                # For string columns, first check for problematic values
+                problematic_mask = data_df['danger_level'].astype(str).str.len() > 2
+                if problematic_mask.any():
+                    st.warning(f"Found {problematic_mask.sum()} records with long danger_level values. Removing them.")
+                    data_df = data_df[~problematic_mask]
+                
+                data_df['danger_level'] = pd.to_numeric(data_df['danger_level'], errors='coerce')
+            
+            # Remove rows with invalid danger levels
+            data_df = data_df.dropna(subset=['danger_level'])
+            
+            if data_df.empty:
+                st.warning("No valid data after cleaning. Check data quality.")
+                return
+                
+        except Exception as e:
+            st.error(f"Error during data cleaning: {str(e)}")
+            return
         
         # Sidebar filters
         st.sidebar.header("Filters")
         
         # Region filter
-        available_regions = sorted(merged_df['name'].dropna().unique())
+        available_regions = sorted(data_df['region_name'].dropna().unique())
         selected_regions = st.sidebar.multiselect(
             "Select Regions", 
             available_regions, 
-            default=available_regions[:5]
+            default=available_regions
         )
         
-        # Weather type filter
-        weather_types = merged_df['weather_type'].unique()
-        selected_weather_type = st.sidebar.selectbox(
-            "Weather Type",
-            options=weather_types,
-            index=0
+        # Danger level filter - now handling numeric values
+        danger_levels = sorted([int(x) for x in data_df['danger_level'].dropna().unique()])
+        selected_danger_levels = st.sidebar.multiselect(
+            "Danger Levels",
+            danger_levels,
+            default=danger_levels
         )
         
-        # Date range filter
-        if not merged_df.empty:
-            min_date = merged_df['time'].min().date()
-            max_date = merged_df['time'].max().date()
-            
-            selected_date_range = st.sidebar.date_input(
-                "Date Range",
-                value=(max_date - timedelta(days=7), max_date),
-                min_value=min_date,
-                max_value=max_date
-            )
-        
-        # Filter data
-        filtered_df = merged_df[
-            (merged_df['name'].isin(selected_regions)) &
-            (merged_df['weather_type'] == selected_weather_type)
+        # Filter data by region and danger level only
+        filtered_df = data_df[
+            (data_df['region_name'].isin(selected_regions)) &
+            (data_df['danger_level'].isin(selected_danger_levels))
         ]
         
-        if len(selected_date_range) == 2:
-            filtered_df = filtered_df[
-                (filtered_df['time'].dt.date >= selected_date_range[0]) &
-                (filtered_df['time'].dt.date <= selected_date_range[1])
-            ]
+        if filtered_df.empty:
+            st.warning("No data matches your filters.")
+            return
         
-        # Main dashboard
+        # Key metrics
         col1, col2, col3, col4 = st.columns(4)
         
-        if not filtered_df.empty:
-            with col1:
-                avg_temp = filtered_df['temperature_2m'].mean()
-                st.metric("Avg Temperature", f"{avg_temp:.1f}°C")
-            
-            with col2:
-                avg_humidity = filtered_df['relative_humidity_2m'].mean()
-                st.metric("Avg Humidity", f"{avg_humidity:.1f}%")
-            
-            with col3:
-                total_precip = filtered_df['precipitation'].sum()
-                st.metric("Total Precipitation", f"{total_precip:.1f}mm")
-            
-            with col4:
-                avg_wind = filtered_df['windspeed_10m'].mean()
-                st.metric("Avg Wind Speed", f"{avg_wind:.1f} m/s")
-        
-        # Map visualization
-        st.subheader("Weather Map")
-        
-        if not filtered_df.empty and 'lat' in filtered_df.columns:
-            # Get latest data for each region
-            latest_data = filtered_df.groupby('region_id').last().reset_index()
-            
-            # Create map
-            fig_map = px.scatter_mapbox(
-                latest_data,
-                lat="lat",
-                lon="lon",
-                color="temperature_2m",
-                size="windspeed_10m",
-                hover_name="name",
-                hover_data={
-                    "temperature_2m": ":.1f",
-                    "relative_humidity_2m": ":.1f",
-                    "precipitation": ":.1f",
-                    "windspeed_10m": ":.1f"
-                },
-                color_continuous_scale="RdYlBu_r",
-                mapbox_style="open-street-map",
-                zoom=4,
-                center={"lat": 65, "lon": 15},
-                height=600,
-                title="Current Weather Conditions"
-            )
-            
-            fig_map.update_layout(margin={"r":0,"t":50,"l":0,"b":0})
-            st.plotly_chart(fig_map, use_container_width=True)
-        
-        # Time series charts
-        col1, col2 = st.columns(2)
-        
         with col1:
-            st.subheader("Temperature Trends")
-            if not filtered_df.empty:
-                fig_temp = px.line(
-                    filtered_df,
-                    x="time",
-                    y="temperature_2m",
-                    color="name",
-                    title="Temperature Over Time"
-                )
-                fig_temp.update_layout(height=400)
-                st.plotly_chart(fig_temp, use_container_width=True)
+            try:
+                avg_danger = filtered_df['danger_level'].astype(float).mean()
+                st.metric("Avg Danger Level", f"{avg_danger:.1f}")
+            except Exception as e:
+                st.metric("Avg Danger Level", "N/A")
+                st.sidebar.write(f"Danger level error: {e}")
         
         with col2:
-            st.subheader("Precipitation")
-            if not filtered_df.empty:
-                fig_precip = px.bar(
-                    filtered_df.groupby(['name', 'time'])['precipitation'].sum().reset_index(),
-                    x="time",
-                    y="precipitation",
-                    color="name",
-                    title="Precipitation Over Time"
-                )
-                fig_precip.update_layout(height=400)
-                st.plotly_chart(fig_precip, use_container_width=True)
+            try:
+                avg_temp_range = (filtered_df['max_temp'].mean() + filtered_df['min_temp'].mean()) / 2
+                st.metric("Avg Temperature", f"{avg_temp_range:.1f}°C")
+            except:
+                st.metric("Avg Temperature", "N/A")
         
-        # Data table
-        st.subheader("Raw Data")
-        if not filtered_df.empty:
-            st.dataframe(
-                filtered_df[['time', 'name', 'temperature_2m', 'relative_humidity_2m', 
-                           'precipitation', 'windspeed_10m', 'weather_type']].head(100),
-                use_container_width=True
+        with col3:
+            try:
+                total_precip = filtered_df['max_precipitation'].sum()
+                st.metric("Total Max Precipitation", f"{total_precip:.1f}mm")
+            except:
+                st.metric("Total Max Precipitation", "N/A")
+        
+        with col4:
+            try:
+                avg_wind = filtered_df['max_windspeed'].mean()
+                st.metric("Avg Max Wind Speed", f"{avg_wind:.1f} m/s")
+            except:
+                st.metric("Avg Max Wind Speed", "N/A")
+        
+        # Regional boundary map visualization
+        st.subheader("Regional Map - Avalanche Danger & Weather")
+        
+        # Single date filter for map
+        min_date = filtered_df['date'].min()
+        max_date = filtered_df['date'].max()
+        
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            # Default to today's date, but constrain to available data range
+            today = date.today()
+            default_date = today if min_date <= today <= max_date else max_date
+            
+            selected_map_date = st.date_input(
+                "Select Date for Map",
+                value=default_date,
+                min_value=min_date,
+                max_value=max_date,
+                key="map_date"
             )
+        
+        # Filter data for the map by selected date
+        map_filtered_df = filtered_df[filtered_df['date'] == selected_map_date]
+        
+        # Get latest data for each region from the selected date
+        latest_data = map_filtered_df.groupby('region_id').last().reset_index()
+        
+        if not latest_data.empty:
+            # Create map with region boundary squares
+            fig_map = go.Figure()
+            
+            # Add region squares colored by danger level  
+            danger_colors = {1: 'rgba(0,128,0,0.5)', 2: 'rgba(255,255,0,0.5)', 3: 'rgba(255,165,0,0.5)', 4: 'rgba(255,0,0,0.5)', 5: 'rgba(139,0,0,0.5)'}
+            
+            for _, row in latest_data.iterrows():
+                if pd.notna(row['east_south_lon']) and pd.notna(row['west_north_lon']) and pd.notna(row['danger_level']):
+                    # Define square corners based on lat/lon bounds
+                    lons = [row['west_north_lon'], row['east_south_lon'], row['east_south_lon'], row['west_north_lon'], row['west_north_lon']]
+                    lats = [row['west_north_lat'], row['west_north_lat'], row['east_south_lat'], row['east_south_lat'], row['west_north_lat']]
+                    
+                    color = danger_colors.get(row['danger_level'], 'gray')
+                    
+                    fig_map.add_trace(go.Scattermapbox(
+                        lat=lats,
+                        lon=lons,
+                        mode='lines',
+                        fill='toself',
+                        fillcolor=color,
+                        line=dict(color='black', width=2),
+                        opacity=1.0,
+                        hoverinfo='skip',
+                        showlegend=False
+                    ))
+                    
+                    # Add grid of invisible points for hover across entire square
+                    lat_points = []
+                    lon_points = []
+                    texts = []
+                    
+                    # Create a 5x5 grid of hover points across the square
+                    lat_range = np.linspace(row['east_south_lat'], row['west_north_lat'], 5)
+                    lon_range = np.linspace(row['west_north_lon'], row['east_south_lon'], 5)
+                    
+                    for lat in lat_range:
+                        for lon in lon_range:
+                            lat_points.append(lat)
+                            lon_points.append(lon)
+                            texts.append(row['region_name'])
+                    
+                    fig_map.add_trace(go.Scattermapbox(
+                        lat=lat_points,
+                        lon=lon_points,
+                        mode='markers',
+                        marker=dict(size=15, opacity=0),
+                        text=texts,
+                        hovertemplate=f'<b>{row["region_name"]}</b><br>' +
+                                    f'Danger Level: {row["danger_level"]}<br>' +
+                                    f'Temp: {row["max_temp"]:.1f}°C<br>' +
+                                    f'Wind: {row["max_windspeed"]:.1f} m/s<br>' +
+                                    '<extra></extra>',
+                        name=f'{row["region_name"]} (Level {int(row["danger_level"])})',
+                        showlegend=False
+                    ))
+            
+            fig_map.update_layout(
+                mapbox=dict(
+                    style="carto-positron",
+                    center=dict(lat=65, lon=15),
+                    zoom=4
+                ),
+                height=600,
+                margin={"r":0,"t":0,"l":0,"b":0},
+                showlegend=True
+            )
+            
+            st.plotly_chart(fig_map, use_container_width=True)
+        
+        # Heatmap of danger levels by region
+        st.subheader("Danger Level Heatmap by Region")
+        
+        # Date range filter for heatmap
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            # Default end date to today, start date 30 days before
+            today = date.today()
+            default_end_date = today if min_date <= today <= max_date else max_date
+            default_start_date = min_date
+            default_start_date = max(default_start_date, min_date)  # Ensure within available range
+            
+            selected_heatmap_range = st.date_input(
+                "Select Date Range for Heatmap",
+                value=(default_start_date, default_end_date),
+                min_value=min_date,
+                max_value=max_date,
+                key="heatmap_date_range"
+            )
+        
+        # Filter data for heatmap by selected date range
+        if len(selected_heatmap_range) == 2:
+            start_date, end_date = selected_heatmap_range
+            heatmap_filtered_df = filtered_df[
+                (filtered_df['date'] >= start_date) &
+                (filtered_df['date'] <= end_date)
+            ]
+        else:
+            heatmap_filtered_df = filtered_df
+        
+        # Create a copy for heatmap processing
+        heatmap_df = heatmap_filtered_df.copy()
+        heatmap_df['date_str'] = heatmap_df['date'].astype(str)
+        
+        heatmap_data = heatmap_df.pivot_table(
+            values='danger_level',
+            index='region_name',
+            columns='date_str',
+            aggfunc='mean'
+        )
+        
+        if not heatmap_data.empty:
+            fig_heatmap = px.imshow(
+                heatmap_data,
+                color_continuous_scale='RdYlGn_r',
+                aspect='auto',
+                title="Avalanche Danger Levels by Region Over Time",
+                labels=dict(x="Date", y="Region", color="Danger Level")
+            )
+            fig_heatmap.update_layout(height=500)
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+        
+        # Data summary table
+        st.subheader("Recent Data Summary")
+        summary_cols = ['date', 'region_name', 'danger_level', 'max_temp', 'min_temp', 
+                       'max_precipitation', 'max_windspeed', 'weather_type']
+        display_df = filtered_df[summary_cols].head(50).copy()
+        display_df = display_df.round({'max_temp': 1, 'min_temp': 1, 'max_precipitation': 1, 'max_windspeed': 1})
+        st.dataframe(display_df, use_container_width=True)
         
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
-        st.info("Make sure the duckdb database exists at './boreas.duckdb' and contains the fact_weather table")
+        st.info("Make sure the duckdb database exists and the dbt models have been run.")
+        st.code(f"Full error: {e}")
 
 if __name__ == "__main__":
     main()
