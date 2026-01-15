@@ -1,24 +1,43 @@
-# Boreas - Avalanche Data Platform
+```
+██████╗  ██████╗ ██████╗ ███████╗ █████╗ ███████╗
+██╔══██╗██╔═══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝
+██████╔╝██║   ██║██████╔╝█████╗  ███████║███████╗
+██╔══██╗██║   ██║██╔══██╗██╔══╝  ██╔══██║╚════██║
+██████╔╝╚██████╔╝██║  ██║███████╗██║  ██║███████║
+╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
+```
+
+**Avalanche Data Platform**
+
+---
+
+## Overview
 
 Boreas is a comprehensive data platform that collects, processes, and visualizes avalanche danger and weather data from Norwegian regions. The platform combines data from multiple sources to provide insights into avalanche conditions and weather patterns.
 
-## Architecture Overview
+## Architecture
 
 The platform consists of four main components:
 
-- **`dlt/`** - Data ingestion pipelines using DLT (Data Load Tool)
-- **`dbt_boreas/`** - Data transformation and modeling using dbt
-- **`dashboard/`** - Interactive Streamlit dashboard for data visualization
-- **`src/`** - Shared configuration and data models
+| Component | Purpose | Technology |
+|-----------|---------|------------|
+| **dlt** | Data ingestion pipelines | DLT (Data Load Tool) |
+| **dbt_boreas** | Data transformation and modeling | dbt |
+| **dashboard** | Interactive visualization | Streamlit |
+| **src** | Shared configuration and data models | Python |
 
 ## Data Flow
+
+```
+External APIs → DLT Pipelines → DuckDB (Bronze) → dbt Transformations → Gold Layer → Dashboard
+```
 
 1. **Extract** - DLT pipelines fetch data from external APIs
 2. **Load** - Raw data is stored in DuckDB (Bronze layer)
 3. **Transform** - dbt models clean and aggregate data (Silver/Gold layers)
 4. **Visualize** - Streamlit dashboard displays processed data
 
-## Quick Start
+## Getting Started
 
 ### Prerequisites
 
@@ -108,14 +127,14 @@ Boreas/
 3. Update `dlt/run_dlt_pipelines.py`
 4. Create corresponding dbt models
 
-## 📈 Dashboard Features
+## Dashboard Features
 
 - **Interactive Map**: Regional avalanche danger visualization
 - **Time Series Analysis**: Historical trends and patterns
 - **Weather Integration**: Correlation between weather and avalanche danger
 - **Data Filters**: Region, date range, and danger level filtering
 
-## ⚙️ Configuration
+## Configuration
 
 ### DLT Configuration
 - Configure API endpoints and credentials in `dlt/.dlt/config.toml`
@@ -128,3 +147,22 @@ Boreas/
 ### Dashboard Configuration
 - Streamlit settings in `.streamlit/config.toml`
 - Database path configuration in dashboard code
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under [LICENSE] - see the LICENSE file for details.
+
+## Support
+
+For questions and support:
+- Create an issue in the repository
+- Check the documentation in individual component folders
+- Review the logs in the `logs/` directory for troubleshooting

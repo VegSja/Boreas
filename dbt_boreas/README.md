@@ -1,31 +1,61 @@
-# dbt Boreas - Data Transformation
+```
+██████╗  ██████╗ ██████╗ ███████╗ █████╗ ███████╗
+██╔══██╗██╔═══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝
+██████╔╝██║   ██║██████╔╝█████╗  ███████║███████╗
+██╔══██╗██║   ██║██╔══██╗██╔══╝  ██╔══██║╚════██║
+██████╔╝╚██████╔╝██║  ██║███████╗██║  ██║███████║
+╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
 
-This dbt project transforms raw avalanche and weather data into clean, analytics-ready datasets using a medallion architecture (Bronze → Silver → Gold).
-
-## Architecture
-
-### Data Layers
-- **🥉 Bronze (1_bronze)**: Raw data from DLT pipelines
-- **🥈 Silver (2_silver)**: Cleaned and standardized data
-- **🥇 Gold (3_gold)**: Business logic and aggregated analytics
-
-## Quick Start
-
-### Prerequisites
-- dbt-core >= 1.11.2
-- dbt-duckdb >= 1.10.0
-- DuckDB >= 1.4.3
-- [uv](https://docs.astral.sh/uv/) package manager
-- Completed DLT pipeline execution
-
-### Setup
-
-1. **Install dependencies**:
-```bash
-uv sync
+DBT TRANSFORMATIONS | Enterprise Data Engineering
 ```
 
-2. **Configure dbt profile** (`profiles.yml`):
+# dbt Boreas - Data Transformation Engine
+
+Production-grade dbt project implementing medallion architecture for avalanche and weather data processing. Transforms raw ingestion data into analytics-ready datasets with comprehensive data quality controls and lineage tracking.
+
+## Medallion Architecture
+
+| Layer | Schema | Purpose | Materialization |
+|-------|--------|---------|----------------|
+| **Bronze** | `1_bronze` | Raw data ingestion from DLT pipelines | `table` |
+| **Silver** | `2_silver` | Cleaned, standardized, deduplicated data | `table` |
+| **Gold** | `3_gold` | Business logic, aggregations, analytics | `table` |
+
+### Data Flow Pipeline
+```
+DLT Sources → Bronze Layer → Silver Layer → Gold Layer → Dashboard/Analytics
+```
+
+## Quick Start Guide
+
+### System Requirements
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| **dbt-core** | >= 1.11.2 | Transformation engine |
+| **dbt-duckdb** | >= 1.10.0 | DuckDB adapter |
+| **DuckDB** | >= 1.4.3 | Analytics database |
+| **uv** | Latest | Package management |
+
+### Setup & Configuration
+
+```bash
+# Install project dependencies
+uv sync
+
+# Navigate to dbt directory
+cd dbt_boreas
+
+# Install dbt packages
+uv run dbt deps
+
+# Execute full transformation pipeline
+uv run dbt run
+
+# Validate data quality
+uv run dbt test
+```
+
+**Database Configuration** (`profiles.yml`):
 ```yaml
 dbt_boreas:
   target: dev
@@ -36,65 +66,57 @@ dbt_boreas:
       schema: main
 ```
 
-2. **Install dbt dependencies**:
+## Data Model Architecture
+
+### Bronze Layer (`1_bronze`) - Source Integration
+| Source Table | Description | Update Frequency |
+|--------------|-------------|------------------|
+| `avalanche_danger_levels` | Raw avalanche warnings from Norwegian authorities | Daily |
+| `weather_forecast` | Meteorological forecast data | 6-hourly |
+| `weather_historic` | Historical weather observations | Daily |
+| `regions` | Geographic boundaries and metadata | Static |
+
+### Silver Layer (`2_silver`) - Data Standardization
+| Model | Purpose | Key Transformations |
+|-------|---------|-------------------|
+| `fact_avalanche_danger` | Standardized avalanche records | Type casting, null handling, deduplication |
+| `fact_weather` | Unified weather dataset | Forecast/historic union, field normalization |
+| `dim_regions` | Regional dimension table | Geographic boundary standardization |
+
+### Gold Layer (`3_gold`) - Business Analytics
+| Model | Description | Business Value |
+|-------|-------------|---------------|
+| `avalanche_average_weather_per_region` | Regional weather aggregated with danger levels | Dashboard analytics, trend analysis |
+
+## Advanced Operations
+
+### Selective Execution
 ```bash
-cd dbt_boreas
-uv run dbt deps
+# Layer-specific execution
+uv run dbt run --select models/2_silver+    # Silver and downstream
+uv run dbt run --select models/3_gold       # Gold layer only
+
+# Model-specific operations
+uv run dbt run --select fact_weather+       # Model and dependencies
+uv run dbt test --select dim_regions        # Test specific model
+
+# Full refresh for schema changes
+uv run dbt run --full-refresh --select models/2_silver
 ```
 
-3. **Run transformations**:
+### Development Workflow
 ```bash
-# Run all models
-uv run dbt run
+# Incremental development
+uv run dbt run --select state:modified+     # Changed models only
+uv run dbt build --select +my_model+        # Full dependency chain
 
-# Run specific layer
-uv run dbt run --select models/2_silver
-uv run dbt run --select models/3_gold
-
-# Run with full refresh
-uv run dbt run --full-refresh
+# Documentation generation
+uv run dbt docs generate && uv run dbt docs serve
 ```
 
-## Data Models
+## Technical Configuration
 
-### Bronze Layer (`1_bronze`)
-Raw data ingested by DLT pipelines:
-
-**Sources**:
-- `avalanche_danger_levels` - Raw avalanche warnings from API
-- `weather_forecast` - Weather forecast data
-- `weather_historic` - Historical weather data
-- `regions` - Regional boundary and metadata
-
-### Silver Layer (`2_silver`)
-Cleaned and standardized data:
-
-**Models**:
-- `fact_avalanche_danger.sql` - Standardized avalanche danger records
-- `fact_weather.sql` - Unified weather data (forecast + historic)
-- `dim_regions.sql` - Regional dimension with geographic boundaries
-
-**Key Transformations**:
-- Data type standardization
-- Null value handling
-- Consistent field naming
-- Deduplication
-
-### Gold Layer (`3_gold`)
-Business logic and analytics:
-
-**Models**:
-- `avalanche_average_weather_per_region.sql` - Regional weather aggregated with avalanche data
-
-**Features**:
-- Regional weather averages per day
-- Avalanche danger correlation
-- Geographic boundary integration
-- Date-based aggregation
-
-## Configuration
-
-### Project Settings (`dbt_project.yml`)
+### Project Configuration (`dbt_project.yml`)
 ```yaml
 models:
   dbt_boreas:
@@ -109,106 +131,78 @@ models:
       +schema: 3_gold
 ```
 
-### Materializations
-- **Tables**: All models for performance
-- **Schema separation**: Logical layer separation
-- **Incremental loading**: Available for large datasets
+### Data Quality Framework
+| Validation Type | Implementation | Frequency |
+|----------------|---------------|-----------|
+| **Primary Key Constraints** | Unique tests on ID fields | Every run |
+| **Not-Null Validations** | Required field checks | Every run |
+| **Referential Integrity** | Foreign key relationships | Every run |
+| **Data Freshness** | Source table recency | Daily |
 
-## 📁 File Structure
+### Performance Optimization
+- **Full Table Materialization**: Optimized for analytics workloads
+- **Schema Separation**: Logical layer isolation for clarity
+- **Incremental Capability**: Available for high-volume datasets
+- **Custom Macros**: Schema naming and utility functions
+
+## Project Structure
 
 ```
 dbt_boreas/
 ├── models/
 │   ├── 1_bronze/
-│   │   └── sources.yml          # Source definitions
+│   │   └── sources.yml                    # Source table definitions
 │   ├── 2_silver/
-│   │   ├── dim_regions.sql      # Regional dimension
-│   │   ├── fact_avalanche_danger.sql
-│   │   ├── fact_weather.sql
-│   │   └── schema.yml           # Model documentation
+│   │   ├── dim_regions.sql               # Regional dimension
+│   │   ├── fact_avalanche_danger.sql     # Avalanche fact table
+│   │   ├── fact_weather.sql              # Weather fact table
+│   │   └── schema.yml                    # Model documentation & tests
 │   └── 3_gold/
 │       ├── avalanche_average_weather_per_region.sql
-│       └── schema.yml
+│       └── schema.yml                    # Analytics documentation
 ├── macros/
-│   └── generate_schema_name.sql  # Custom schema naming
-├── dbt_project.yml              # Project configuration
-├── profiles.yml                 # Database connection
-└── packages.yml                 # Dependencies
+│   └── generate_schema_name.sql          # Custom schema logic
+├── dbt_project.yml                       # Project configuration
+├── profiles.yml                          # Database connections
+├── packages.yml                          # Package dependencies
+└── README.md                             # This documentation
 ```
 
-## Data Quality
+## Integration & Dependencies
 
-### Source Validation
-- Primary key constraints
-- Not-null validations
-- Referential integrity checks
+### Upstream Systems
+- **DLT Pipelines**: Data ingestion prerequisite
+- **Source APIs**: Norwegian avalanche/weather services
+- **DuckDB Database**: Raw data storage
 
-### Model Testing
+### Downstream Consumers
+- **Streamlit Dashboard**: Real-time visualization
+- **Analytics Tools**: Business intelligence platforms
+- **Data Exports**: CSV/JSON output formats
+
+## Production Operations
+
+### Environment Management
 ```bash
-# Run all tests
-uv run dbt test
+# Development execution
+uv run dbt run --target dev
 
-# Test specific models
-uv run dbt test --select models/2_silver
-```
+# Production deployment
+uv run dbt run --target prod --full-refresh
 
-### Data Lineage
-```bash
-# Generate documentation
-uv run dbt docs generate
-uv run dbt docs serve
-```
-
-## Development Workflow
-
-### 1. Model Development
-```bash
-# Develop in dev environment
-uv run dbt run --select +my_model+
-
-# Test during development
-uv run dbt test --select my_model
-```
-
-### 2. Incremental Updates
-```bash
-# Run only changed models
-uv run dbt run --select state:modified+
-
-# Fresh build when needed
-uv run dbt run --full-refresh
-```
-
-### 3. Production Deployment
-```bash
-# Target production
-uv run dbt run --target prod
-
-# Full pipeline
+# Complete pipeline with testing
 uv run dbt build --target prod
 ```
 
-## Key Metrics & KPIs
+### Monitoring & Maintenance
+| Metric | Monitoring | Alerting |
+|--------|------------|----------|
+| **Model Success Rate** | dbt logs | Email notifications |
+| **Data Freshness** | Source table checks | Slack alerts |
+| **Test Failures** | Quality validations | Dashboard warnings |
 
-Generated by gold layer models:
-- Regional avalanche danger trends
-- Weather pattern correlation
-- Geographic coverage statistics
-- Data quality metrics
+---
 
-## Integration
-
-### Upstream Dependencies
-- DLT pipelines must complete successfully
-- Source data availability in DuckDB
-
-### Downstream Consumers
-- Streamlit dashboard (`dashboard/app.py`)
-- Analytics tools and reports
-- Data exports and APIs
-
-## 📚 Resources
-
-- [dbt Documentation](https://docs.getdbt.com/)
-- [dbt-duckdb Plugin](https://github.com/duckdb/dbt-duckdb)
-- [Medallion Architecture](https://docs.databricks.com/lakehouse/medallion.html)
+**Enterprise Documentation Standards**  
+**Architecture**: Medallion (Bronze → Silver → Gold)  
+**Last Updated**: January 2026
