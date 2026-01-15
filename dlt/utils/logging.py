@@ -3,13 +3,14 @@ import logging
 import sys
 from typing import Optional
 
+DEFAULT_LOGGER_VALUE = 'INFO'
 
 def setup_logger(name: str, level: Optional[str] = None) -> logging.Logger:
     """Set up a structured logger for the pipeline.
     
     Args:
         name: Logger name (typically __name__)
-        level: Log level override (defaults to ERROR)
+        level: Log level override 
         
     Returns:
         Configured logger instance
@@ -24,7 +25,7 @@ def setup_logger(name: str, level: Optional[str] = None) -> logging.Logger:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         
-    log_level = level or 'ERROR'
+    log_level = level or DEFAULT_LOGGER_VALUE
     logger.setLevel(getattr(logging, log_level.upper()))
     
     return logger

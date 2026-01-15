@@ -19,7 +19,7 @@ api_base_url = "https://api.open-meteo.com/v1"
 request_timeout = 30
 
 [sources.avalanche_warnings.avalanche_warning_source]
-start_date = "2026-11-01T00:00"
+start_date = "2025-11-01T00:00:00"
 language_key = "1"
 api_base_url = "https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api"
 request_timeout = 30
