@@ -4,4 +4,6 @@ sources:
   - name: 1_bronze
     schema: 1_bronze
     tables:
-      - name: raw_weather
+      - name: weather_forecast
+      - name: weather_historic
+      - name: avalanche_danger_levels
