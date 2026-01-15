@@ -6,4 +6,5 @@ sources:
     tables:
       - name: weather_forecast
       - name: weather_historic
+      - name: avalanche_regions
       - name: avalanche_danger_levels

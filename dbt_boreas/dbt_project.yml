@@ -13,10 +13,13 @@ clean-targets:
   - "dbt_packages"
 
 models:
-  dbt_w:
+  dbt_boreas:
     1_bronze:
       +materialized: table
       +schema: 1_bronze
     2_silver:
       +materialized: table
       +schema: 2_silver
+    3_gold:
+      +materialized: table
+      +schema: 2_gold
