@@ -3,6 +3,57 @@ from typing import List
 from src.models.regions import WeatherGridSquare
 
 
+def is_within_norway(center_lat: float, center_lon: float) -> bool:
+    """Check if a grid center point is within Norway's borders.
+    
+    This uses detailed latitude-based longitude boundaries to exclude Sweden and Finland.
+    Norway's eastern border varies significantly by latitude.
+    
+    Args:
+        center_lat: Center latitude of the grid
+        center_lon: Center longitude of the grid
+        
+    Returns:
+        True if the point is within Norway, False otherwise
+    """
+    # Latitude bounds
+    if center_lat < 57.9 or center_lat > 71.2:
+        return False
+    
+    # Western bound (coast)
+    min_lon = 4.5
+    
+    # Detailed eastern bounds by latitude to exclude Sweden and Finland
+    if center_lat < 59.0:
+        max_lon = 12.0
+    elif center_lat < 60.0:
+        max_lon = 13.0
+    elif center_lat < 61.0:
+        max_lon = 13.5
+    elif center_lat < 62.0:
+        max_lon = 15.0
+    elif center_lat < 63.0:
+        max_lon = 16.0
+    elif center_lat < 64.0:
+        max_lon = 18.0
+    elif center_lat < 65.0:
+        max_lon = 23.0
+    elif center_lat < 66.0:
+        max_lon = 25.0
+    elif center_lat < 67.0:
+        max_lon = 27.0
+    elif center_lat < 68.0:
+        max_lon = 28.5
+    elif center_lat < 69.0:
+        max_lon = 29.0
+    elif center_lat < 70.0:
+        max_lon = 30.0
+    else:
+        max_lon = 31.0
+    
+    return min_lon <= center_lon <= max_lon
+
+
 def generate_norway_weather_grids() -> List[WeatherGridSquare]:
     """Generate 100x100km weather grid squares covering Norway.
     
@@ -41,9 +92,12 @@ def generate_norway_weather_grids() -> List[WeatherGridSquare]:
             west_lon = lon
             east_lon = lon + lon_step
             
-            # Only include squares that overlap with Norway's approximate bounds
-            if (south_lat <= 71.0 and north_lat >= 58.0 and 
-                west_lon <= 31.0 and east_lon >= 4.5):
+            # Calculate grid center point
+            center_lat = (south_lat + north_lat) / 2
+            center_lon = (west_lon + east_lon) / 2
+            
+            # Only include squares that are within Norway
+            if is_within_norway(center_lat, center_lon):
                 
                 grid_id = f"WG_{row:03d}_{col:03d}"
                 
