@@ -1,0 +1,128 @@
+name: Run dlt and dbt Pipelines
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'dlt/**'
+      - 'dbt_boreas/**'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  run-pipelines:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      
+      - name: Install UV
+        uses: astral-sh/setup-uv@v2
+      
+      - name: Install dlt dependencies
+        run: |
+          cd dlt
+          uv pip install -r requirements.txt
+          cd ..
+      
+      - name: Install dbt dependencies
+        run: |
+          cd dbt_boreas
+          uv pip install dbt-duckdb
+          cd ..
+      
+      - name: Azure Login (OIDC)
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download DuckDB from Blob Storage
+        run: |
+          az storage blob download \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --no-progress || echo "DuckDB not found, creating new"
+      
+      - name: Configure dlt
+        env:
+          DLT_SECRET__SOURCES__WEATHER_HISTORIC__WEATHER_HISTORIC_SOURCE__START_DATE: "2020-01-01T00:00"
+          DLT_SECRET__SOURCES__WEATHER_HISTORIC__WEATHER_HISTORIC_SOURCE__HOURLY_PARAMS: '["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]'
+          DLT_SECRET__SOURCES__WEATHER_HISTORIC__WEATHER_HISTORIC_SOURCE__TIMEZONE: "Europe/Oslo"
+          DLT_SECRET__SOURCES__WEATHER_HISTORIC__WEATHER_HISTORIC_SOURCE__ARCHIVE_API_BASE_URL: "https://archive-api.open-meteo.com/v1"
+          DLT_DESTINATIONS__DUCKDB__DATABASE: "./boreas.duckdb"
+        run: |
+          mkdir -p ~/.dlt
+          cat > ~/.dlt/config.toml << 'EOF'
+          [runtime]
+          log_level = "INFO"
+          dlthub_telemetry = false
+          
+          [requests]
+          max_retries = 5
+          backoff_factor = 2
+          
+          [sources.weather_historic.weather_historic_source]
+          start_date = "2020-01-01T00:00"
+          hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
+          timezone = "Europe/Oslo"
+          archive_api_base_url = "https://archive-api.open-meteo.com/v1"
+          request_timeout = 30
+          
+          [sources.weather_forecast.weather_forecast_source]
+          hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
+          timezone = "Europe/Oslo"
+          api_base_url = "https://api.open-meteo.com/v1"
+          request_timeout = 30
+          
+          [sources.avalanche_warnings.avalanche_warning_source]
+          start_date = "2020-01-01T00:00:00"
+          language_key = "1"
+          api_base_url = "https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api"
+          request_timeout = 30
+          EOF
+      
+      - name: Run dlt Pipelines
+        run: |
+          cd dlt
+          python run_dlt_pipelines.py
+          cd ..
+      
+      - name: Run dbt
+        run: |
+          cd dbt_boreas
+          uv run dbt run --profiles-dir=.
+          cd ..
+      
+      - name: Upload DuckDB to Blob Storage
+        if: success()
+        run: |
+          az storage blob upload \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
+            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --overwrite
+      
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Pipeline execution failed. Check logs above."
+      
+      - name: Azure Logout
+        if: always()
+        run: az logout
