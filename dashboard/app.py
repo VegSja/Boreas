@@ -48,12 +48,22 @@ def load_weather_data():
     SELECT 
         date,
         max_temp,
+        average_temperature,
         min_temp,
         max_relative_humidity,
+        average_relative_humidity,
         min_relative_humidity,
-        max_precipitation,
-        min_precipitation,
+        max_snowfall,
+        average_snowfall,
+        min_snowfall,
+        max_rain,
+        average_rain,
+        min_rain,
+        max_snow_depth,
+        average_snow_depth,
+        min_snow_depth,
         max_windspeed,
+        average_windspeed,
         min_windspeed,
         weather_type,
         east_south_lon,
@@ -351,10 +361,23 @@ def main():
                     # Weather variable selector
                     weather_variables = {
                         'max_temp': 'Max Temperature (°C)',
+                        'average_temperature': 'Average Temperature (°C)',
                         'min_temp': 'Min Temperature (°C)',
-                        'max_precipitation': 'Max Precipitation (mm)',
+                        'max_relative_humidity': 'Max Humidity (%)',
+                        'average_relative_humidity': 'Average Humidity (%)',
+                        'min_relative_humidity': 'Min Humidity (%)',
+                        'max_snowfall': 'Max Snowfall (mm)',
+                        'average_snowfall': 'Average Snowfall (mm)',
+                        'min_snowfall': 'Min Snowfall (mm)',
+                        'max_rain': 'Max Rain (mm)',
+                        'average_rain': 'Average Rain (mm)',
+                        'min_rain': 'Min Rain (mm)',
+                        'max_snow_depth': 'Max Snow Depth (cm)',
+                        'average_snow_depth': 'Average Snow Depth (cm)',
+                        'min_snow_depth': 'Min Snow Depth (cm)',
                         'max_windspeed': 'Max Wind Speed (m/s)',
-                        'max_relative_humidity': 'Max Humidity (%)'
+                        'average_windspeed': 'Average Wind Speed (m/s)',
+                        'min_windspeed': 'Min Wind Speed (m/s)'
                     }
                     selected_weather_var = st.selectbox(
                         "Weather Variable", 
@@ -459,11 +482,14 @@ def main():
         with table_col2:
             if not weather_df.empty:
                 st.write("**Weather Data**")
-                weather_summary_cols = ['date', 'max_temp', 'min_temp', 'max_precipitation', 
-                                       'max_windspeed', 'weather_type']
+                weather_summary_cols = ['date', 'max_temp', 'average_temperature', 'min_temp',
+                                       'max_relative_humidity', 'max_snowfall', 'max_rain',
+                                       'max_snow_depth', 'max_windspeed', 'weather_type']
                 display_weather_df = weather_df[weather_summary_cols].head(20).copy()
-                display_weather_df = display_weather_df.round({'max_temp': 1, 'min_temp': 1, 
-                                                             'max_precipitation': 1, 'max_windspeed': 1})
+                display_weather_df = display_weather_df.round({'max_temp': 1, 'average_temperature': 1,
+                                                             'min_temp': 1, 'max_relative_humidity': 1,
+                                                             'max_snowfall': 1, 'max_rain': 1,
+                                                             'max_snow_depth': 1, 'max_windspeed': 1})
                 st.dataframe(display_weather_df, use_container_width=True)
         
     except Exception as e:

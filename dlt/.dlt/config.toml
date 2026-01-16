@@ -7,13 +7,13 @@ dlthub_telemetry = true
 
 [sources.weather_historic.weather_historic_source]
 start_date = "2026-01-01T00:00"
-hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
+hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
 timezone = "Europe/Oslo"
 archive_api_base_url = "https://archive-api.open-meteo.com/v1"
 request_timeout = 30
 
 [sources.weather_forecast.weather_forecast_source]
-hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
+hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
 timezone = "Europe/Oslo"
 api_base_url = "https://api.open-meteo.com/v1"
 request_timeout = 30

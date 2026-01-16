@@ -41,11 +41,13 @@ SELECT
     time,
     temperature_2m,
     relative_humidity_2m,
-    precipitation,
+    snowfall,
+    rain,
+    snow_depth,
     windspeed_10m,
     loaded_at, 
     grid_id,
-    weather_type,
+    weather_type
 FROM unioned
 
 

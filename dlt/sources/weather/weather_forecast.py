@@ -27,7 +27,7 @@ def weather_forecast_source(
         List of dlt resources for forecast data from all grid squares
     """
     if hourly_params is None:
-        hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
+        hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
         
     resources = []
     for grid in WEATHER_GRID_SQUARES:
