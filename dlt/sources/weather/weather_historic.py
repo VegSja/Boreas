@@ -1,6 +1,7 @@
 import dlt
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Iterator, Dict, Any
+import time as time_module
 
 from src.config.weather_grids import WEATHER_GRID_SQUARES
 from .weather_common import fetch_weather_data
@@ -10,25 +11,25 @@ from utils.logging import setup_logger
 logger = setup_logger(__name__)
 
 
+def date_range_chunks(start: date, end: date, chunk_days: int) -> Iterator[tuple[date, date]]:
+    """Split a date range into smaller chunks."""
+    current = start
+    while current < end:
+        chunk_end = min(current + timedelta(days=chunk_days - 1), end)
+        yield current, chunk_end
+        current = chunk_end + timedelta(days=1)
+
+
 @dlt.source
 def weather_historic_source(
     start_date: str = dlt.config.value,
     hourly_params: list = dlt.config.value,
     timezone: str = dlt.config.value,
     archive_api_base_url: str = dlt.config.value,
-    request_timeout: int = dlt.config.value
+    request_timeout: int = dlt.config.value,
+    chunk_days: int = 30,
 ):
-    """DLT source for historic weather data.
-    
-    Args:
-        start_date: Start date for historic data collection
-        hourly_params: List of weather parameters to fetch
-        timezone: Timezone for weather data
-        archive_api_base_url: Base URL for archive weather API
-    
-    Returns:
-        List of dlt resources for historic data from all grid squares
-    """
+    """DLT source for historic weather data."""
     if hourly_params is None:
         hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
         
@@ -47,33 +48,34 @@ def weather_historic_source(
                     "time", initial_value=start_date
                 )
             ) -> Iterator[Dict[str, Any]]:
-                """Fetch historic weather data for a specific grid square.
+                start = datetime.strptime(time.last_value, "%Y-%m-%dT%H:%M").date()
+                end = date.today()
                 
-                Args:
-                    time: Incremental loading state for time column
+                for chunk_start, chunk_end in date_range_chunks(start, end, chunk_days):
+                    logger.info(f"Fetching {g.grid_id}: {chunk_start} to {chunk_end}")
                     
-                Yields:
-                    Dict containing historic weather data
-                """
-                params = {
-                    "latitude": g.center_lat,
-                    "longitude": g.center_lon,
-                    "start_date": datetime.strptime(time.last_value, "%Y-%m-%dT%H:%M").date().isoformat(),
-                    "end_date": date.today().isoformat(),
-                    "hourly": ",".join(hourly_params),
-                    "timezone": timezone,
-                }
-                
-                try:
-                    yield from fetch_weather_data(
-                        f"{archive_api_base_url}/archive", 
-                        params, 
-                        region=g,
-                        request_timeout=request_timeout
-                    )
-                except WeatherAPIError as e:
-                    logger.error(f"Failed to fetch historic data for {g.grid_id}: {e}")
-                    raise
+                    params = {
+                        "latitude": g.center_lat,
+                        "longitude": g.center_lon,
+                        "start_date": chunk_start.isoformat(),
+                        "end_date": chunk_end.isoformat(),
+                        "hourly": ",".join(hourly_params),
+                        "timezone": timezone,
+                    }
+                    
+                    try:
+                        for record in fetch_weather_data(
+                            f"{archive_api_base_url}/archive", 
+                            params, 
+                            region=g,
+                            request_timeout=request_timeout
+                        ):
+                            yield record
+                        
+                    except WeatherAPIError as e:
+                        logger.error(f"Failed at {g.grid_id} ({chunk_start} to {chunk_end}): {e}")
+                        raise
+                        
             return get_historic_data
         resources.append(make_historic_resource())
     return resources
