@@ -6,7 +6,7 @@
 ██████╔╝╚██████╔╝██║  ██║███████╗██║  ██║███████║
 ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝
 
-DBT TRANSFORMATIONS | Enterprise Data Engineering
+DBT TRANSFORMATIONS 
 ```
 
 # dbt Boreas - Data Transformation Engine
@@ -15,11 +15,11 @@ Production-grade dbt project implementing medallion architecture for avalanche a
 
 ## Medallion Architecture
 
-| Layer | Schema | Purpose | Materialization |
-|-------|--------|---------|----------------|
-| **Bronze** | `1_bronze` | Raw data ingestion from DLT pipelines | `table` |
-| **Silver** | `2_silver` | Cleaned, standardized, deduplicated data | `table` |
-| **Gold** | `3_gold` | Business logic, aggregations, analytics | `table` |
+| Layer | Schema | Purpose | 
+|-------|--------|---------|
+| **Bronze** | `1_bronze` | Raw data ingestion from DLT pipelines |
+| **Silver** | `2_silver` | Cleaned, standardized, deduplicated, modelled data |
+| **Gold** | `3_gold` | Business logic, aggregations, analytics |
 
 ### Data Flow Pipeline
 ```
@@ -49,44 +49,11 @@ cd dbt_boreas
 uv run dbt deps
 
 # Execute full transformation pipeline
-uv run dbt run
+uv run dbt build
 
 # Validate data quality
 uv run dbt test
 ```
-
-**Database Configuration** (`profiles.yml`):
-```yaml
-dbt_boreas:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: '../boreas.duckdb'
-      schema: main
-```
-
-## Data Model Architecture
-
-### Bronze Layer (`1_bronze`) - Source Integration
-| Source Table | Description | Update Frequency |
-|--------------|-------------|------------------|
-| `avalanche_danger_levels` | Raw avalanche warnings from Norwegian authorities | Daily |
-| `weather_forecast` | Meteorological forecast data | 6-hourly |
-| `weather_historic` | Historical weather observations | Daily |
-| `regions` | Geographic boundaries and metadata | Static |
-
-### Silver Layer (`2_silver`) - Data Standardization
-| Model | Purpose | Key Transformations |
-|-------|---------|-------------------|
-| `fact_avalanche_danger` | Standardized avalanche records | Type casting, null handling, deduplication |
-| `fact_weather` | Unified weather dataset | Forecast/historic union, field normalization |
-| `dim_regions` | Regional dimension table | Geographic boundary standardization |
-
-### Gold Layer (`3_gold`) - Business Analytics
-| Model | Description | Business Value |
-|-------|-------------|---------------|
-| `avalanche_average_weather_per_region` | Regional weather aggregated with danger levels | Dashboard analytics, trend analysis |
 
 ## Advanced Operations
 
@@ -113,37 +80,6 @@ uv run dbt build --select +my_model+        # Full dependency chain
 # Documentation generation
 uv run dbt docs generate && uv run dbt docs serve
 ```
-
-## Technical Configuration
-
-### Project Configuration (`dbt_project.yml`)
-```yaml
-models:
-  dbt_boreas:
-    1_bronze:
-      +materialized: table
-      +schema: 1_bronze
-    2_silver:
-      +materialized: table
-      +schema: 2_silver
-    3_gold:
-      +materialized: table
-      +schema: 3_gold
-```
-
-### Data Quality Framework
-| Validation Type | Implementation | Frequency |
-|----------------|---------------|-----------|
-| **Primary Key Constraints** | Unique tests on ID fields | Every run |
-| **Not-Null Validations** | Required field checks | Every run |
-| **Referential Integrity** | Foreign key relationships | Every run |
-| **Data Freshness** | Source table recency | Daily |
-
-### Performance Optimization
-- **Full Table Materialization**: Optimized for analytics workloads
-- **Schema Separation**: Logical layer isolation for clarity
-- **Incremental Capability**: Available for high-volume datasets
-- **Custom Macros**: Schema naming and utility functions
 
 ## Project Structure
 
@@ -193,16 +129,3 @@ uv run dbt run --target prod --full-refresh
 # Complete pipeline with testing
 uv run dbt build --target prod
 ```
-
-### Monitoring & Maintenance
-| Metric | Monitoring | Alerting |
-|--------|------------|----------|
-| **Model Success Rate** | dbt logs | Email notifications |
-| **Data Freshness** | Source table checks | Slack alerts |
-| **Test Failures** | Quality validations | Dashboard warnings |
-
----
-
-**Enterprise Documentation Standards**  
-**Architecture**: Medallion (Bronze → Silver → Gold)  
-**Last Updated**: January 2026

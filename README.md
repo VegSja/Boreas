@@ -107,12 +107,10 @@ Boreas/
 ### Avalanche Data
 - **Source**: Norwegian Avalanche Warning Service API
 - **Content**: Danger levels, warnings, regional information
-- **Update Frequency**: Daily
 
 ### Weather Data
 - **Source**: Weather API (forecast and historical)
 - **Content**: Temperature, precipitation, wind speed, humidity
-- **Update Frequency**: Hourly/Daily
 
 ### Regional Data
 - **Source**: Static configuration
@@ -147,22 +145,3 @@ Boreas/
 ### Dashboard Configuration
 - Streamlit settings in `.streamlit/config.toml`
 - Database path configuration in dashboard code
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under [LICENSE] - see the LICENSE file for details.
-
-## Support
-
-For questions and support:
-- Create an issue in the repository
-- Check the documentation in individual component folders
-- Review the logs in the `logs/` directory for troubleshooting
