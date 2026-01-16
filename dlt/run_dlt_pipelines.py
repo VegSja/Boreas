@@ -12,6 +12,6 @@ if __name__ == "__main__":
     print("Run regions pipeline")
     run_regions_pipeline()
     print("Run weather pipeline")
-    run_weather_pipeline()
+    # run_weather_pipeline()
     print("Run avalanche pipeline")
     run_avalanche_pipeline()

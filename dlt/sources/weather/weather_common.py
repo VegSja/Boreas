@@ -54,8 +54,8 @@ def fetch_weather_data(
     except requests.RequestException as e:
         error_msg = f"Failed to fetch weather data for grid {region.grid_id}: {e}"
         logger.error(error_msg)
-        raise WeatherAPIError(error_msg) from e
+        return
     except (KeyError, ValueError) as e:
         error_msg = f"Failed to process weather data for grid {region.grid_id}: {e}"
         logger.error(error_msg)
-        raise WeatherAPIError(error_msg) from e
+        return
