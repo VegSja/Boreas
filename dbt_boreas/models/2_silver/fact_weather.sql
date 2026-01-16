@@ -1,21 +1,32 @@
 {{
     config(
-        materialized = 'table'
+        materialized = 'incremental',
+        unique_key = ['time', 'region_id'],
+        incremental_strategy = 'merge',
+        on_schema_change = 'sync_all_columns'
     )
 }}
 
 WITH historic AS (
-    SELECT *,
-    'historic' AS weather_type
+    SELECT 
+        *,
+        'historic' AS weather_type
     FROM {{ source('1_bronze', 'weather_historic') }}
     WHERE "time" < today()
+    {% if is_incremental() %}
+        AND loaded_at > (SELECT MAX(loaded_at) FROM {{this}})
+    {% endif %}
 ), 
 
 forecast AS (
-    SELECT *,
-    'forecast' AS weather_type
+    SELECT 
+        *,
+        'forecast' AS weather_type
     FROM {{ source('1_bronze', 'weather_forecast') }}
     WHERE "time" > today()
+    {% if is_incremental() %}
+        AND loaded_at > (SELECT MAX(loaded_at) FROM {{this}})
+    {% endif %}
 ),
 
 unioned AS (
@@ -32,7 +43,7 @@ SELECT
     relative_humidity_2m,
     precipitation,
     windspeed_10m,
-    loaded_at, --TODO: Needed?
+    loaded_at, 
     region_id,
     weather_type,
 FROM unioned

@@ -1,4 +1,5 @@
 """Helper functions for avalanche data processing."""
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterator
 from dlt.sources.helpers import requests
 
@@ -46,10 +47,12 @@ def fetch_avalanche_warnings_data(
         data = response.json()
         if not isinstance(data, list):
             raise AvalancheAPIError(f"Invalid response format from avalanche API for region {region_id}")
-            
+        
+        loaded_at = datetime.now(timezone.utc).isoformat()
         record_count = 0
         for record in data:
             record_count += 1
+            record['loaded_at'] = loaded_at
             yield record
             
         logger.info(f"Successfully processed {record_count} avalanche warning records for region {region_id}")
