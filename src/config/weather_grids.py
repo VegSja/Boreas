@@ -4,9 +4,11 @@ from src.models.regions import WeatherGridSquare
 
 
 def is_within_norway(center_lat: float, center_lon: float) -> bool:
-    """Check if a grid center point is within Norway's borders.
+    """Check if a grid center point is within Norway's borders (inland/coastal).
     
-    This uses detailed latitude-based longitude boundaries to exclude Sweden and Finland.
+    This uses detailed latitude-based longitude boundaries to exclude:
+    - Sweden and Finland (east)
+    - Norwegian Sea (west) - keeping only inland areas or one coastal square
     Norway's eastern border varies significantly by latitude.
     
     Args:
@@ -20,8 +22,32 @@ def is_within_norway(center_lat: float, center_lon: float) -> bool:
     if center_lat < 57.9 or center_lat > 71.2:
         return False
     
-    # Western bound (coast)
-    min_lon = 4.5
+    # Detailed western bounds by latitude (exclude Norwegian Sea)
+    # Allows one coastal square or inland only
+    if center_lat < 59.0:
+        # South: Oslo region - extend coverage westward to include full southwest
+        min_lon = 4.0
+    elif center_lat < 60.0:
+        # Southeast: Kristiansand area - extend to cover southwest coast
+        min_lon = 4.5
+    elif center_lat < 61.0:
+        # South-central: Stavanger area - keep one coastal square
+        min_lon = 5.0
+    elif center_lat < 63.0:
+        # West-central: Bergen area - keep coastal access
+        min_lon = 4.8
+    elif center_lat < 65.0:
+        # Central: Trondheim area
+        min_lon = 6.0
+    elif center_lat < 67.0:
+        # North: Troms coast - reduce northwest coverage
+        min_lon = 10.0
+    elif center_lat < 69.0:
+        # Northern Finnmark: reduce northwest coverage
+        min_lon = 10.0
+    else:
+        # Far north: reduce northwest coverage
+        min_lon = 10.0
     
     # Detailed eastern bounds by latitude to exclude Sweden and Finland
     if center_lat < 59.0:
