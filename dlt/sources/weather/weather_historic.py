@@ -2,7 +2,7 @@ import dlt
 from datetime import datetime, date
 from typing import Iterator, Dict, Any
 
-from src.config.regions import AVALANCHE_REGIONS
+from src.config.weather_grids import WEATHER_GRID_SQUARES
 from .weather_common import fetch_weather_data
 from exceptions import WeatherAPIError
 from utils.logging import setup_logger
@@ -27,19 +27,19 @@ def weather_historic_source(
         archive_api_base_url: Base URL for archive weather API
     
     Returns:
-        List of dlt resources for historic data from all regions
+        List of dlt resources for historic data from all grid squares
     """
     if hourly_params is None:
         hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
         
     resources = []
-    for region in AVALANCHE_REGIONS:
-        def make_historic_resource(r=region):
+    for grid in WEATHER_GRID_SQUARES:
+        def make_historic_resource(g=grid):
             @dlt.resource(
                 table_name="weather_historic",
                 write_disposition="merge",
-                primary_key=['time', 'region_id'],
-                name=f'historic_{r.region_id}',
+                primary_key=['time', 'grid_id'],
+                name=f'historic_{g.grid_id}',
                 schema_contract={"tables": "evolve", "columns": "freeze", "data_type": "freeze"}
             )
             def get_historic_data(
@@ -47,7 +47,7 @@ def weather_historic_source(
                     "time", initial_value=start_date
                 )
             ) -> Iterator[Dict[str, Any]]:
-                """Fetch historic weather data for a specific region.
+                """Fetch historic weather data for a specific grid square.
                 
                 Args:
                     time: Incremental loading state for time column
@@ -56,8 +56,8 @@ def weather_historic_source(
                     Dict containing historic weather data
                 """
                 params = {
-                    "latitude": r.center_lat,
-                    "longitude": r.center_lon,
+                    "latitude": g.center_lat,
+                    "longitude": g.center_lon,
                     "start_date": datetime.strptime(time.last_value, "%Y-%m-%dT%H:%M").date().isoformat(),
                     "end_date": date.today().isoformat(),
                     "hourly": ",".join(hourly_params),
@@ -68,11 +68,11 @@ def weather_historic_source(
                     yield from fetch_weather_data(
                         f"{archive_api_base_url}/archive", 
                         params, 
-                        region=r,
+                        region=g,
                         request_timeout=request_timeout
                     )
                 except WeatherAPIError as e:
-                    logger.error(f"Failed to fetch historic data for {r.name}: {e}")
+                    logger.error(f"Failed to fetch historic data for {g.grid_id}: {e}")
                     raise
             return get_historic_data
         resources.append(make_historic_resource())

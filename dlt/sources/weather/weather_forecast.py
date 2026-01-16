@@ -1,7 +1,7 @@
 import dlt
 from typing import Iterator, Dict, Any
 
-from src.config.regions import AVALANCHE_REGIONS
+from src.config.weather_grids import WEATHER_GRID_SQUARES
 from .weather_common import fetch_weather_data
 from exceptions import WeatherAPIError
 from utils.logging import setup_logger
@@ -24,30 +24,30 @@ def weather_forecast_source(
         api_base_url: Base URL for weather API
     
     Returns:
-        List of dlt resources for forecast data from all regions
+        List of dlt resources for forecast data from all grid squares
     """
     if hourly_params is None:
         hourly_params = ["temperature_2m", "relative_humidity_2m", "precipitation", "windspeed_10m"]
         
     resources = []
-    for region in AVALANCHE_REGIONS:
-        def make_forecast_resource(r=region):
+    for grid in WEATHER_GRID_SQUARES:
+        def make_forecast_resource(g=grid):
             @dlt.resource(
                 table_name="weather_forecast",
                 write_disposition="replace",
-                primary_key=['time', 'region_id'],
-                name=f'forecast_{r.region_id}',
+                primary_key=['time', 'grid_id'],
+                name=f'forecast_{g.grid_id}',
                 schema_contract={"tables": "evolve", "columns": "freeze", "data_type": "freeze"}
             )
             def get_forecast_data() -> Iterator[Dict[str, Any]]:
-                """Fetch forecast data for a specific region.
+                """Fetch forecast data for a specific grid square.
                 
                 Yields:
                     Dict containing forecast weather data
                 """
                 params = {
-                    "latitude": r.center_lat,
-                    "longitude": r.center_lon,
+                    "latitude": g.center_lat,
+                    "longitude": g.center_lon,
                     "hourly": ",".join(hourly_params),
                     "timezone": timezone,
                 }
@@ -56,11 +56,11 @@ def weather_forecast_source(
                     yield from fetch_weather_data(
                         f"{api_base_url}/forecast", 
                         params, 
-                        region=r,
+                        region=g,
                         request_timeout=request_timeout
                     )
                 except WeatherAPIError as e:
-                    logger.error(f"Failed to fetch forecast data for {r.name}: {e}")
+                    logger.error(f"Failed to fetch forecast data for {g.grid_id}: {e}")
                     raise
             return get_forecast_data
         resources.append(make_forecast_resource())

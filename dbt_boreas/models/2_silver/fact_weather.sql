@@ -1,7 +1,7 @@
 {{
     config(
         materialized = 'incremental',
-        unique_key = ['time', 'region_id'],
+        unique_key = ['time', 'grid_id'],
         incremental_strategy = 'merge',
         on_schema_change = 'sync_all_columns'
     )
@@ -44,7 +44,7 @@ SELECT
     precipitation,
     windspeed_10m,
     loaded_at, 
-    region_id,
+    grid_id,
     weather_type,
 FROM unioned
 

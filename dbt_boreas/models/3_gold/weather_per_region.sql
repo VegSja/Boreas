@@ -4,10 +4,10 @@
     )
 }}
 
-WITH regions AS (
+WITH grids AS (
     SELECT 
         *
-    FROM {{ ref('dim_regions') }}
+    FROM {{ ref('dim_grids') }}
 ),
 
 weather AS (
@@ -16,32 +16,9 @@ weather AS (
     FROM {{ ref('fact_weather') }}
 ),
 
-avalanches AS (
-    SELECT 
-        *
-    FROM {{ ref('fact_avalanche_danger' )}}
-),
-
-avalanches_with_regions AS (
-    SELECT
-        DATE(valid_from) AS "date",
-        a.*,
-        r.name AS region_name,
-        r.region_id,
-        r.center_lat,
-        r.center_lon,
-        r.east_south_lon,
-        r.east_south_lat,
-        r.west_north_lon,
-        r.west_north_lat
-    FROM avalanches a
-    LEFT JOIN regions r
-    ON a.region_id = r.region_id
-),
-
 daily_aggregation_weather AS (
     SELECT
-        region_id,
+        grid_id,
         DATE(time) AS "date",
         MAX(temperature_2m) AS max_temp,
         AVG(temperature_2m) AS average_temperature,
@@ -57,30 +34,20 @@ daily_aggregation_weather AS (
         MIN(windspeed_10m) AS min_windspeed,
         MODE(weather_type) AS weather_type
     FROM weather
-    GROUP BY  region_id, DATE(time)
+    GROUP BY  grid_id, DATE(time)
 ),
 
-total AS (
+daw_with_grid_info AS (
     SELECT 
         *
-    FROM avalanches_with_regions awr
-    LEFT JOIN daily_aggregation_weather daw
-    ON awr.date = daw.date AND awr.region_id = daw.region_id
+    FROM daily_aggregation_weather daw
+    LEFT JOIN grids g
+    ON daw.grid_id = g.id
 )
+
 
 SELECT 
     date,
-    registration_id,
-    region_id,
-    region_name,
-    danger_level,
-    valid_from,
-    valid_to,
-    main_text,
-    east_south_lon,
-	east_south_lat,
-	west_north_lon,
-	west_north_lat,
 	max_temp,
 	min_temp,
 	max_relative_humidity,
@@ -89,6 +56,9 @@ SELECT
 	min_precipitation,
 	max_windspeed,
 	min_windspeed,
-	weather_type
-
-FROM total
+	weather_type,
+    east_south_lon,
+	east_south_lat,
+	west_north_lon,
+	west_north_lat,
+FROM daw_with_grid_info

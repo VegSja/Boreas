@@ -1,3 +1,5 @@
 models:
   - name: fact_weather
   - name: fact_avalanche_danger
+  - name: dim_grids
+  - name: dim_regions
