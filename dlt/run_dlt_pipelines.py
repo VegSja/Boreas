@@ -5,8 +5,8 @@ Entry point for executing the data pipeline.
 
 import sys
 from pipelines.avalanche_pipeline import run_avalanche_pipeline
-from dlt.pipelines.weather_forecast_pipeline import run_weather_forecast_pipeline
-from dlt.pipelines.weather_historic_pipeline import run_weather_historic_pipeline
+from pipelines.weather_forecast_pipeline import run_weather_forecast_pipeline
+from pipelines.weather_historic_pipeline import run_weather_historic_pipeline
 from pipelines.region_pipeline import run_regions_pipeline
 from utils.logging import setup_logger
 
