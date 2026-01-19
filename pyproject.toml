@@ -6,6 +6,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "alive-progress>=3.3.0",
+    "dagster>=1.12.11",
+    "dagster-dbt>=0.28.11",
+    "dagster-duckdb>=0.28.11",
+    "dagster-webserver>=1.12.11",
     "dbt-core>=1.11.2",
     "dbt-duckdb>=1.10.0",
     "dlt[duckdb,workspace]>=1.20.0",

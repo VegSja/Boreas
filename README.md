@@ -60,10 +60,10 @@ uv sync --extra dashboard
 
 ### Running the Data Pipeline
 
-1. **Configure DLT settings** (see `dlt/.dlt/config.toml`)
+1. **Configure DLT settings** (see `dlt_boreas/.dlt/config.toml`)
 2. **Run data ingestion**:
    ```bash
-   cd dlt
+   cd dlt_boreas
    uv run python run_dlt_pipelines.py
    ```
 3. **Run dbt transformations**:
@@ -85,7 +85,7 @@ The dashboard will be available at `http://localhost:8501`
 
 ```
 Boreas/
-├── dlt/                    # Data ingestion (DLT)
+├── dlt_boreas/             # Data ingestion (DLT)
 │   ├── pipelines/         # Pipeline definitions
 │   ├── sources/           # Data source implementations
 │   └── utils/             # Shared utilities
@@ -120,9 +120,9 @@ Boreas/
 ## Development
 
 ### Adding New Data Sources
-1. Create source implementation in `dlt/sources/`
-2. Add pipeline in `dlt/pipelines/`
-3. Update `dlt/run_dlt_pipelines.py`
+1. Create source implementation in `dlt_boreas/sources/`
+2. Add pipeline in `dlt_boreas/pipelines/`
+3. Update `dlt_boreas/run_dlt_pipelines.py`
 4. Create corresponding dbt models
 
 ## Dashboard Features
@@ -135,7 +135,7 @@ Boreas/
 ## Configuration
 
 ### DLT Configuration
-- Configure API endpoints and credentials in `dlt/.dlt/config.toml`
+- Configure API endpoints and credentials in `dlt_boreas/.dlt/config.toml`
 - Adjust pipeline settings in individual pipeline files
 
 ### dbt Configuration
