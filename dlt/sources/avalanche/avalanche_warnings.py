@@ -11,18 +11,34 @@ from utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
+
+def date_range_chunks(start: date, end: date, chunk_days: int) -> Iterator[tuple[date, date]]:
+    """Split a date range into smaller chunks."""
+    current = start
+    while current < end:
+        chunk_end = min(current + timedelta(days=chunk_days - 1), end)
+        yield current, chunk_end
+        current = chunk_end + timedelta(days=1)
+
+
 @dlt.source
 def avalanche_warning_source(
     start_date: str = dlt.config.value,
     language_key: str = dlt.config.value,
     api_base_url: str = dlt.config.value,
-    request_timeout: int = dlt.config.value
+    request_timeout: int = dlt.config.value,
+    chunk_days: int = 30,
+    overlap_days: int = 7,
 ):
     """DLT source for avalanche warning data.
     
     Args:
         start_date: Start date for data collection
         language_key: Language key for API requests
+        api_base_url: Base URL for avalanche API
+        request_timeout: Request timeout in seconds
+        chunk_days: Number of days to fetch per API request
+        overlap_days: Number of recent days to always re-fetch for forecast updates
     
     Returns:
         List of dlt resources for avalanche warnings from all regions
@@ -61,18 +77,32 @@ def avalanche_warning_source(
                 Yields:
                     Dict containing avalanche warning data
                 """
-                try:
-                    yield from fetch_avalanche_warnings_data(
-                        region_id=r.region_id,
-                        language_key=language_key,
-                        start_date=datetime.strptime(incremental_start_date.last_value,"%Y-%m-%dT%H:%M:%S").date().isoformat(),
-                        end_date=(date.today() + timedelta(days=4)).isoformat(),
-                        api_base_url=api_base_url,
-                        request_timeout=request_timeout
-                    )
-                except AvalancheAPIError as e:
-                    logger.error(f"Failed to fetch avalanche warning data for {r.name}: {e}")
-                    raise
+                incremental_date = datetime.strptime(
+                    incremental_start_date.last_value, "%Y-%m-%dT%H:%M:%S"
+                ).date()
+                # Always re-fetch at least the last N days to catch forecast updates
+                overlap_date = date.today() - timedelta(days=overlap_days)
+                start = min(incremental_date, overlap_date)
+                end = date.today() + timedelta(days=4)  # Include forecast days
+                
+                for chunk_start, chunk_end in date_range_chunks(start, end, chunk_days):
+                    logger.info(f"Fetching {r.region_id}: {chunk_start} to {chunk_end}")
+                    
+                    try:
+                        for record in fetch_avalanche_warnings_data(
+                            region_id=r.region_id,
+                            language_key=language_key,
+                            start_date=chunk_start.isoformat(),
+                            end_date=chunk_end.isoformat(),
+                            api_base_url=api_base_url,
+                            request_timeout=request_timeout
+                        ):
+                            yield record
+                        
+                    except AvalancheAPIError as e:
+                        logger.error(f"Failed at {r.region_id} ({chunk_start} to {chunk_end}): {e}")
+                        raise
+                        
             return avalanche_warning_resource
         resources.append(make_avalanche_warning_resource())
     return resources
