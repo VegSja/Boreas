@@ -12,17 +12,12 @@ terraform {
     }
   }
 
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "azurerm" {
+    resource_group_name  = "rg-boreas-prod"
+    storage_account_name = "storageboreasprod"
+    container_name       = "tfstate"
+    key                  = "boreas.tfstate"
   }
-  
-  # Uncomment for remote state in Azure Storage
-  # backend "azurerm" {
-  #   resource_group_name  = "rg-terraform-state"
-  #   storage_account_name = "saterraformstate"
-  #   container_name       = "tfstate"
-  #   key                  = "boreas/terraform.tfstate"
-  # }
 }
 
 provider "azurerm" {
