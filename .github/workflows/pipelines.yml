@@ -45,7 +45,8 @@ jobs:
             --no-progress || echo "DuckDB not found, creating new"
       
       - name: Run dlt Pipelines
-        run: uv run python dlt/run_dlt_pipelines.py
+        working-directory: dlt
+        run: uv run python run_dlt_pipelines.py
       
       - name: Run dbt
         run: uv run dbt build --project-dir dbt_boreas --profiles-dir dbt_boreas
