@@ -1,16 +1,32 @@
 # Boreas Azure Infrastructure as Code
 
-Professional Terraform configuration for deploying the Boreas application to Azure with:
-- DuckDB database in Azure Blob Storage
-- Streamlit dashboard on Azure App Service
-- dlt and dbt pipelines running in GitHub Actions CI/CD
+Terraform configuration for deploying the Boreas data platform infrastructure to Azure:
+
+- **Azure Storage Account** - Blob storage for DuckDB database
+- **Azure Key Vault** - Secure storage for secrets and access keys
+- **GitHub Actions OIDC** - Passwordless authentication for CI/CD pipelines
+- **Service Principal** - For DuckDB Azure extension access
+
+> **Note:** App Service deployment is currently commented out. The Streamlit dashboard can be deployed separately when needed.
+
+## Files Overview
+
+| File | Description |
+|------|-------------|
+| `main.tf` | Core infrastructure resources |
+| `variables.tf` | Input variable definitions |
+| `outputs.tf` | Output values (secrets for GitHub) |
+| `versions.tf` | Provider version constraints |
+| `terraform.tfvars.example` | Example variable values |
+| `github-workflows-pipelines.yml` | Template for dlt/dbt CI/CD workflow |
+| `github-workflows-streamlit.yml` | Template for Streamlit deployment workflow |
 
 ## Prerequisites
 
 1. **Azure Account** - Active Azure subscription
 2. **Terraform** - v1.5+
 3. **Azure CLI** - Installed and authenticated (`az login`)
-4. **GitHub Repository** - With secrets configured (see GitHub Actions Setup)
+4. **GitHub Repository** - For OIDC federated credentials
 
 ## Setup Instructions
 
@@ -21,20 +37,23 @@ az login
 az account set --subscription "YOUR_SUBSCRIPTION_ID"
 ```
 
-### 2. Terraform Variables
+### 2. Configure Variables
 
-Create `terraform.tfvars` in this directory:
+Copy the example file and customize:
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Edit `terraform.tfvars`:
 
 ```hcl
-# terraform.tfvars
-environment              = "prod"
-location                 = "northeurope"
-resource_group_name      = "rg-boreas-prod"
-storage_account_name     = "storageboreasXXXX"  # Must be globally unique, lowercase
-app_service_plan_name    = "asp-boreas-prod"
-app_service_name         = "app-boreas-prod"
-github_org               = "YOUR_GITHUB_ORG"
-github_repo              = "Boreas"
+environment          = "prod"
+location             = "northeurope"
+resource_group_name  = "rg-boreas-prod"
+storage_account_name = "storageboreasXXXX"  # Must be globally unique, 3-24 lowercase alphanumeric
+github_org           = "YOUR_GITHUB_ORG"
+github_repo          = "Boreas"
 ```
 
 ### 3. Deploy Infrastructure
@@ -48,158 +67,72 @@ terraform apply
 
 ### 4. Configure GitHub Actions Secrets
 
-After Terraform deployment completes, add these secrets to your GitHub repository (Settings > Secrets and variables > Actions):
+After deployment, add these secrets to your GitHub repository (Settings → Secrets and variables → Actions).
 
+**For GitHub Actions OIDC Authentication:**
 ```
-AZURE_SUBSCRIPTION_ID    # From Azure Portal
-AZURE_TENANT_ID          # From Azure Portal
-AZURE_CLIENT_ID          # Created by Terraform
-AZURE_CLIENT_SECRET      # Created by Terraform
-AZURE_STORAGE_ACCOUNT    # From Terraform output
-AZURE_STORAGE_CONTAINER  # From Terraform output
-AZURE_STORAGE_KEY        # From Terraform output
+AZURE_CLIENT_ID         # terraform output github_actions_client_id
+AZURE_TENANT_ID         # terraform output github_actions_tenant_id
+AZURE_SUBSCRIPTION_ID   # terraform output github_actions_subscription_id
 ```
 
-Get these values from Terraform outputs:
+**For DuckDB Azure Extension (Service Principal):**
+```
+DUCKDB_AZURE_TENANT_ID      # terraform output duckdb_tenant_id
+DUCKDB_AZURE_CLIENT_ID      # terraform output duckdb_client_id
+DUCKDB_AZURE_CLIENT_SECRET  # terraform output -raw duckdb_client_secret
+```
+
+**For Storage Access:**
+```
+AZURE_STORAGE_ACCOUNT    # terraform output storage_account_name
+AZURE_STORAGE_CONTAINER  # terraform output storage_container_name (= "duckdb")
+```
+
+Get all outputs:
 ```bash
-terraform output -json
+terraform output
+terraform output -raw duckdb_client_secret  # For sensitive values
 ```
 
-### 5. Configure Streamlit App
+### 5. Set Up GitHub Actions Workflows
 
-The Streamlit app needs to be deployed to App Service. Create a deployment workflow in `.github/workflows/deploy-streamlit.yml`:
+Copy the workflow templates to your repository:
 
-```yaml
-name: Deploy Streamlit to Azure
-
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'dashboard/**'
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      
-      - name: Deploy to App Service
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: app-boreas-prod
-          package: dashboard
-          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
-```
-
-### 6. GitHub Actions for dlt & dbt
-
-Create `.github/workflows/run-pipelines.yml`:
-
-```yaml
-name: Run dlt and dbt Pipelines
-
-on:
-  schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC
-  workflow_dispatch:
-
-jobs:
-  run-pipelines:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.13'
-      
-      - name: Install dependencies
-        run: |
-          pip install -r dlt/requirements.txt
-          pip install dbt-duckdb
-      
-      - name: Configure dlt
-        env:
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
-          AZURE_STORAGE_KEY: ${{ secrets.AZURE_STORAGE_KEY }}
-          AZURE_STORAGE_CONTAINER: ${{ secrets.AZURE_STORAGE_CONTAINER }}
-        run: |
-          mkdir -p ~/.dlt
-          cat > ~/.dlt/config.toml << EOF
-          [runtime]
-          log_level = "INFO"
-          [destinations.duckdb]
-          database = "/tmp/boreas.duckdb"
-          [sources]
-          # ... your dlt config
-          EOF
-      
-      - name: Run dlt Pipelines
-        run: cd dlt && python run_dlt_pipelines.py
-      
-      - name: Upload DuckDB to Blob Storage
-        run: |
-          az storage blob upload \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT }} \
-            --account-key ${{ secrets.AZURE_STORAGE_KEY }} \
-            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER }} \
-            --name boreas.duckdb \
-            --file /tmp/boreas.duckdb \
-            --overwrite
-      
-      - name: Run dbt
-        run: cd dbt_boreas && dbt run
-```
-
-### 7. Update Application Config
-
-Update your DuckDB connection string in the Streamlit app to use Blob Storage:
-
-```python
-# dashboard/app.py
-import os
-import duckdb
-
-@st.cache_resource
-def get_db_connection():
-    # Download DuckDB from Blob Storage
-    storage_account = os.getenv('AZURE_STORAGE_ACCOUNT')
-    container = os.getenv('AZURE_STORAGE_CONTAINER')
-    storage_key = os.getenv('AZURE_STORAGE_KEY')
-    
-    # Use DuckDB's S3/Azure extension if needed
-    # Or cache the DB locally and sync periodically
-    conn_string = f"./boreas.duckdb"
-    return duckdb.connect(conn_string, read_only=True)
-```
-
-## Terraform Files Overview
-
-- **main.tf** - Core Azure resources (Storage, App Service, Key Vault)
-- **variables.tf** - Input variables with defaults
-- **outputs.tf** - Output values for GitHub Actions setup
-- **github.tf** - GitHub Actions OIDC configuration
-
-## Monitoring & Debugging
-
-### View App Service Logs
 ```bash
-az webapp log tail --name app-boreas-prod --resource-group rg-boreas-prod
+mkdir -p ../.github/workflows
+cp github-workflows-pipelines.yml ../.github/workflows/pipelines.yml
+cp github-workflows-streamlit.yml ../.github/workflows/deploy-streamlit.yml
 ```
+
+Review and customize the workflows as needed.
+
+## Resources Created
+
+| Resource | Description |
+|----------|-------------|
+| `azurerm_resource_group` | Resource group for all Boreas resources |
+| `azurerm_storage_account` | Storage account with LRS redundancy |
+| `azurerm_storage_container` | Private container named "duckdb" |
+| `azurerm_key_vault` | Key Vault for storing secrets |
+| `azurerm_user_assigned_identity` | Managed identity for GitHub Actions OIDC |
+| `azurerm_federated_identity_credential` | OIDC federation for passwordless CI/CD |
+| `azuread_application` | Azure AD app for DuckDB service principal |
+| `azuread_service_principal` | Service principal for DuckDB Azure extension |
+
+## Useful Commands
 
 ### Check Storage Blob
 ```bash
 az storage blob list \
-  --account-name storageboreasXXXX \
+  --account-name YOUR_STORAGE_ACCOUNT \
   --container-name duckdb \
-  --account-key YOUR_KEY
+  --auth-mode login
+```
+
+### View Key Vault Secrets
+```bash
+az keyvault secret list --vault-name YOUR_KEYVAULT_NAME
 ```
 
 ### Destroy All Resources
@@ -207,37 +140,29 @@ az storage blob list \
 terraform destroy
 ```
 
-## Cost Optimization
+## Security Notes
 
-- **Storage**: LRS redundancy (lowest cost)
-- **App Service**: B1 tier (lowest tier, suitable for dashboards)
-- **Schedule dlt/dbt**: Run once daily instead of continuous
-- **Cleanup old blobs**: Set blob retention policy
-
-## Security Best Practices
-
-1. ✅ Managed Identity for GitHub Actions (no service principal secrets)
-2. ✅ Key Vault for sensitive data
-3. ✅ Private Storage Account access (recommended)
-4. ✅ Network Security Groups for App Service
-5. ✅ Encryption at rest for all storage
+- **OIDC Authentication**: GitHub Actions uses federated identity credentials (no long-lived secrets)
+- **Key Vault**: Storage keys and DuckDB client secret stored securely
+- **Service Principal**: DuckDB access uses a dedicated service principal with 1-year credential rotation
+- **Storage**: Private container access, HTTPS-only, TLS 1.2 minimum
 
 ## Troubleshooting
 
+### GitHub Actions OIDC Fails
+- Verify the `subject` in federated credential matches your branch (default: `refs/heads/main`)
+- Check that the GitHub org/repo variables are correct
+- Ensure `id-token: write` permission is set in workflow
+
 ### DuckDB Connection Issues
-- Ensure DuckDB is in correct blob location
-- Check storage account firewall rules
-- Verify SAS token hasn't expired
+- Verify service principal credentials are correct
+- Check storage account firewall rules allow access
+- Ensure container "duckdb" exists
 
-### GitHub Actions Fails
-- Check Azure credentials in secrets
-- Verify OIDC federation is configured
-- Review App Service deployment slots
+### Terraform State
+- State is stored locally by default (`terraform.tfstate`)
+- For team use, uncomment the remote backend in `versions.tf`
 
-### Performance Issues
-- Increase App Service tier (B2, B3)
-- Enable caching in Streamlit
-- Consider cosmosdb for faster queries
 
 ## Support
 
