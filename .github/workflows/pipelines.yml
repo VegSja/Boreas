@@ -71,12 +71,18 @@ jobs:
             --no-progress
       
       - name: Install dbt packages
+        working-directory: dbt_boreas
         run: |
-          uv run dbt deps --project-dir dbt_boreas --profiles-dir dbt_boreas
+          uv run dbt deps
+
+      - name: dbt debug
+        run: |
+          uv run dbt debug
 
       - name: Run dbt Transformations
+        working-directory: dbt_boreas
         run: |
-          uv run dbt build --project-dir dbt_boreas --profiles-dir dbt_boreas
+          uv run dbt build 
       
       - name: Upload DuckDB to Blob Storage
         if: success()
