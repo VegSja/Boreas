@@ -24,4 +24,5 @@ def create_weather_forecast_pipeline():
 def run_weather_forecast_pipeline():
     """Run the complete weather data pipeline."""
     pipeline = create_weather_forecast_pipeline()
+    pipeline.sync_destination()  # Restore state from DuckDB
     pipeline.run([weather_forecast_source()])

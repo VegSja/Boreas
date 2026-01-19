@@ -22,4 +22,5 @@ def create_avalanche_pipeline():
 
 def run_avalanche_pipeline():
     pipeline = create_avalanche_pipeline()
+    pipeline.sync_destination()  # Restore state from DuckDB
     pipeline.run(avalanche_warning_source())

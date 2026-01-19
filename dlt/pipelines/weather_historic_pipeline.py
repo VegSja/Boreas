@@ -25,4 +25,5 @@ def create_weather_historic_pipeline():
 def run_weather_historic_pipeline():
     """Run the complete weather data pipeline."""
     pipeline = create_weather_historic_pipeline()
+    pipeline.sync_destination()  # Restore state from DuckDB
     pipeline.run([weather_grids_source(), weather_historic_source()])
