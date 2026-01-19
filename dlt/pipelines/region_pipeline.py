@@ -22,4 +22,5 @@ def create_region_pipeline():
 
 def run_regions_pipeline():
     pipeline = create_region_pipeline()
+    pipeline.sync_destination()  # Restore state from DuckDB
     pipeline.run(regions_source())

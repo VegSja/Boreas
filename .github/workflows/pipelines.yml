@@ -24,17 +24,8 @@ jobs:
       - name: Install UV
         uses: astral-sh/setup-uv@v2
       
-      - name: Install dlt dependencies
-        run: |
-          cd dlt
-          uv pip install -r requirements.txt
-          cd ..
-      
-      - name: Install dbt dependencies
-        run: |
-          cd dbt_boreas
-          uv pip install dbt-duckdb
-          cd ..
+      - name: Install dependencies
+        run: uv sync
       
       - name: Azure Login (OIDC)
         uses: azure/login@v1
@@ -54,16 +45,10 @@ jobs:
             --no-progress || echo "DuckDB not found, creating new"
       
       - name: Run dlt Pipelines
-        run: |
-          cd dlt
-          python run_dlt_pipelines.py
-          cd ..
+        run: uv run python dlt/run_dlt_pipelines.py
       
       - name: Run dbt
-        run: |
-          cd dbt_boreas
-          uv run dbt run --profiles-dir=.
-          cd ..
+        run: uv run dbt build --project-dir dbt_boreas --profiles-dir dbt_boreas
       
       - name: Upload DuckDB to Blob Storage
         if: success()
