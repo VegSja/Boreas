@@ -45,6 +45,7 @@ jobs:
             --no-progress || echo "DuckDB not found, creating new"
       
       - name: Run dlt Pipelines
+        continue-on-error: true
         working-directory: dlt
         run: uv run python run_dlt_pipelines.py
       
