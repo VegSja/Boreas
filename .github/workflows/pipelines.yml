@@ -76,6 +76,7 @@ jobs:
           uv run dbt deps
 
       - name: dbt debug
+        working-directory: dbt_boreas
         run: |
           uv run dbt debug
 
