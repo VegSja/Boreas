@@ -49,6 +49,27 @@ jobs:
         working-directory: dlt
         run: uv run python run_dlt_pipelines.py
       
+      - name: Upload DuckDB checkpoint after dlt
+        run: |
+          az storage blob upload \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
+            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --overwrite
+      
+      - name: Download DuckDB checkpoint before dbt
+        run: |
+          az storage blob download \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
+            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --overwrite \
+            --no-progress
+      
       - name: Install dbt packages
         run: |
           uv run dbt deps --project-dir dbt_boreas --profiles-dir dbt_boreas
