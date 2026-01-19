@@ -1,0 +1,85 @@
+name: Run dlt and dbt Pipelines
+
+on:
+  # schedule:
+  #   - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  run-pipelines:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13'
+      
+      - name: Install UV
+        uses: astral-sh/setup-uv@v2
+      
+      - name: Install dlt dependencies
+        run: |
+          cd dlt
+          uv pip install -r requirements.txt
+          cd ..
+      
+      - name: Install dbt dependencies
+        run: |
+          cd dbt_boreas
+          uv pip install dbt-duckdb
+          cd ..
+      
+      - name: Azure Login (OIDC)
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Download DuckDB from Blob Storage
+        run: |
+          az storage blob download \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
+            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --no-progress || echo "DuckDB not found, creating new"
+      
+      - name: Run dlt Pipelines
+        run: |
+          cd dlt
+          python run_dlt_pipelines.py
+          cd ..
+      
+      - name: Run dbt
+        run: |
+          cd dbt_boreas
+          uv run dbt run --profiles-dir=.
+          cd ..
+      
+      - name: Upload DuckDB to Blob Storage
+        if: success()
+        run: |
+          az storage blob upload \
+            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
+            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
+            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
+            --name boreas.duckdb \
+            --file boreas.duckdb \
+            --overwrite
+      
+      - name: Notify on Failure
+        if: failure()
+        run: echo "Pipeline execution failed. Check logs above."
+      
+      - name: Azure Logout
+        if: always()
+        run: az logout
