@@ -74,9 +74,21 @@ uv sync --extra dashboard
 
 ### Launching the Dashboard
 
+**Option 1 – Local:**
+
 ```bash
-cd dashboard
-uv run streamlit run app.py
+# Run from repo root (boreas.duckdb must be in the current directory)
+uv run streamlit run dashboard/app.py
+```
+
+**Option 2 – Docker (recommended):**
+
+```bash
+# Build the image and start the container
+docker compose up --build
+
+# Run in the background
+docker compose up --build -d
 ```
 
 The dashboard will be available at `http://localhost:8501`
@@ -131,6 +143,7 @@ Boreas/
 - **Time Series Analysis**: Historical trends and patterns
 - **Weather Integration**: Correlation between weather and avalanche danger
 - **Data Filters**: Region, date range, and danger level filtering
+- **Data Profiling**: Missing value analysis, outlier detection, distribution plots, and correlation matrix (accessible via the *Data Profiling* sidebar page)
 
 ## Configuration
 
