@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import duckdb
 import pandas as pd
@@ -13,10 +14,12 @@ st.set_page_config(
     layout="wide"
 )
 
-# Database connection
+# Database connection – path can be overridden via BOREAS_DB_PATH env var
+DB_PATH = os.environ.get("BOREAS_DB_PATH", "./boreas.duckdb")
+
 @st.cache_resource
 def get_db_connection():
-    return duckdb.connect("./boreas.duckdb", read_only=True)
+    return duckdb.connect(DB_PATH, read_only=True)
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def load_avalanche_data():
