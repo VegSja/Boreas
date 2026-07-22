@@ -34,14 +34,6 @@ root_module = "dagster_boreas"
 code_location_target_module = "src.dagster_boreas.definitions"
 code_location_name = "boreas"
 
-[project.optional-dependencies]
-dashboard = [
-    "streamlit>=1.28.0",
-    "plotly>=5.17.0",
-    "folium>=0.15.0",
-    "streamlit-folium>=0.15.0",
-]
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["src*", "dagster_boreas*", "dlt_boreas*"]

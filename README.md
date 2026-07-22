@@ -23,20 +23,19 @@ The platform consists of four main components:
 |-----------|---------|------------|
 | **dlt** | Data ingestion pipelines | DLT (Data Load Tool) |
 | **dbt_boreas** | Data transformation and modeling | dbt |
-| **dashboard** | Interactive visualization | Streamlit |
-| **evidence** | Static analytics dashboard | Evidence.dev (OSS) |
+| **evidence** | Analytics dashboard | Evidence.dev (OSS) |
 | **src** | Shared configuration and data models | Python |
 
 ## Data Flow
 
 ```
-External APIs → DLT Pipelines → DuckDB (Bronze) → dbt Transformations → Gold Layer → Dashboard
+External APIs → DLT Pipelines → DuckDB (Bronze) → dbt Transformations → Gold Layer → Evidence
 ```
 
 1. **Extract** - DLT pipelines fetch data from external APIs
 2. **Load** - Raw data is stored in DuckDB (Bronze layer)
 3. **Transform** - dbt models clean and aggregate data (Silver/Gold layers)
-4. **Visualize** - Streamlit dashboard displays processed data
+4. **Visualize** - Evidence.dev renders a static analytics site from the gold layer
 
 ## Getting Started
 
@@ -54,9 +53,6 @@ cd Boreas
 
 # Install dependencies
 uv sync
-
-# Install dashboard dependencies (optional)
-uv sync --extra dashboard
 ```
 
 ### Running the Data Pipeline
@@ -102,32 +98,11 @@ cd dbt_boreas && uv run dbt build
 
 **Configuration:** dlt settings live in `dlt_boreas/.dlt/config.toml`.
 
-### Launching the Dashboard
-
-**Option 1 – Local:**
-
-```bash
-# Run from repo root (boreas.duckdb must be in the current directory)
-uv run streamlit run dashboard/app.py
-```
-
-**Option 2 – Docker (recommended):**
-
-```bash
-# Build the image and start the container
-docker compose up --build
-
-# Run in the background
-docker compose up --build -d
-```
-
-The dashboard will be available at `http://localhost:8501`
-
 ### Evidence.dev Dashboard (OSS)
 
 A static analytics site built with the open-source version of Evidence.dev,
-queried directly against the DuckDB gold layer. Pages take inspiration from
-the Streamlit app (danger map, region heatmap, weather trends).
+queried directly against the DuckDB gold layer (danger map, region heatmap,
+weather trends).
 
 **Local dev:**
 
@@ -162,7 +137,7 @@ Boreas/
 │   │   ├── 2_silver/     # Cleaned data layer
 │   │   └── 3_gold/       # Business logic layer
 │   └── macros/            # dbt macros
-├── dashboard/             # Streamlit visualization
+├── evidence/              # Evidence.dev static analytics site
 ├── src/                   # Shared configuration
 │   ├── config/           # Region definitions
 │   └── models/           # Data models
@@ -194,11 +169,10 @@ Boreas/
 
 ## Dashboard Features
 
-- **Interactive Map**: Regional avalanche danger visualization
-- **Time Series Analysis**: Historical trends and patterns
-- **Weather Integration**: Correlation between weather and avalanche danger
-- **Data Filters**: Region, date range, and danger level filtering
-- **Data Profiling**: Missing value analysis, outlier detection, distribution plots, and correlation matrix (accessible via the *Data Profiling* sidebar page)
+- **Interactive Maps** — avalanche danger and per-variable weather maps by date
+- **Time Series** — per-region danger history and national daily weather trends
+- **Heatmap** — 60-day danger level heatmap by region
+- **Warning Tables** — searchable, filterable tables of latest warnings
 
 ## Configuration
 
@@ -210,6 +184,7 @@ Boreas/
 - Database connection settings in `dbt_boreas/profiles.yml`
 - Model configurations in `dbt_boreas/dbt_project.yml`
 
-### Dashboard Configuration
-- Streamlit settings in `.streamlit/config.toml`
-- Database path configuration in dashboard code
+### Evidence Configuration
+- Pages live in `evidence/pages/`, source queries in `evidence/sources/boreas/`
+- DuckDB path is set via `EVIDENCE_SOURCE__boreas__filename` (Dagster asset
+  sets this automatically)
