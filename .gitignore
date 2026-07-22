@@ -12,6 +12,7 @@ _local
 *.duckdb
 *.wal 
 .dagster_home/*
+.omo/
 
 # Git repository
 .git/

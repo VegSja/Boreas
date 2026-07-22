@@ -16,3 +16,11 @@ services:
       timeout: 10s
       retries: 3
       start_period: 15s
+
+  evidence:
+    build:
+      context: .
+      dockerfile: evidence/Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped

@@ -24,6 +24,7 @@ The platform consists of four main components:
 | **dlt** | Data ingestion pipelines | DLT (Data Load Tool) |
 | **dbt_boreas** | Data transformation and modeling | dbt |
 | **dashboard** | Interactive visualization | Streamlit |
+| **evidence** | Static analytics dashboard | Evidence.dev (OSS) |
 | **src** | Shared configuration and data models | Python |
 
 ## Data Flow
@@ -121,6 +122,30 @@ docker compose up --build -d
 ```
 
 The dashboard will be available at `http://localhost:8501`
+
+### Evidence.dev Dashboard (OSS)
+
+A static analytics site built with the open-source version of Evidence.dev,
+queried directly against the DuckDB gold layer. Pages take inspiration from
+the Streamlit app (danger map, region heatmap, weather trends).
+
+**Local dev:**
+
+```bash
+cd evidence
+npm install
+npm run sources   # materialize queries from ../boreas.duckdb
+npm run dev       # http://localhost:3000
+```
+
+**Dagster-integrated build:** the `4_reporting/evidence_dashboard` asset
+depends on both gold models and runs `evidence sources && evidence build`
+after they refresh — so `uv run dg launch --assets "*"` or the daily
+schedule regenerates the site into `evidence/build/`. Requires
+`node`/`npm` on the host and a one-time `npm install` in `evidence/`.
+
+**Docker:** `docker compose up --build evidence` serves the built site at
+`http://localhost:8080` (nginx).
 
 ## Project Structure
 
