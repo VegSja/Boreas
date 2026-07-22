@@ -11,6 +11,7 @@ _local
 # ignore duckdb
 *.duckdb
 *.wal 
+.dagster_home/*
 
 # Git repository
 .git/
