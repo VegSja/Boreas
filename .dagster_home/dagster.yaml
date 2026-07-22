@@ -1,0 +1,4 @@
+concurrency:
+  pools:
+    granularity: op
+    default_limit: 1

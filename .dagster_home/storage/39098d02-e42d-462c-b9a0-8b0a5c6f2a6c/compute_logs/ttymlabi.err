@@ -1,0 +1,6 @@
+[32m2026-07-22 12:01:36 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38398 - LOGS_CAPTURED - Capturing logs for process (pid: 38398).
+[32m2026-07-22 12:01:36 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38398 - 1_bronze__weather_forecast - STEP_START - Started execution of step "1_bronze__weather_forecast".
+[32m2026-07-22 12:01:36 +0200[0m - dagster - [34mINFO[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 1_bronze__weather_forecast - Running weather_forecast dlt pipeline
+[32m2026-07-22 12:01:45 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38398 - 1_bronze__weather_forecast - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
+[32m2026-07-22 12:01:45 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38398 - 1_bronze__weather_forecast - ASSET_MATERIALIZATION - Materialized value 1_bronze weather_forecast.
+[32m2026-07-22 12:01:45 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38398 - 1_bronze__weather_forecast - STEP_SUCCESS - Finished execution of step "1_bronze__weather_forecast" in 9.28s.

@@ -1,0 +1,28 @@
+import dlt
+import os
+from dlt_boreas.sources.weather.weather_forecast import weather_forecast_source
+
+
+def create_weather_forecast_pipeline():
+    """Create and configure the weather data pipeline."""
+    # Get absolute path to project root (two levels up from this file)
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    db_path = os.path.join(project_root, 'boreas')
+    
+    pipeline = dlt.pipeline(
+        pipeline_name="weather_forecast_pipeline",
+        destination=dlt.destinations.duckdb(
+            destination_name=db_path,
+            enable_dataset_name_normalization=False
+        ),
+        dataset_name="1_bronze",
+        progress='enlighten'
+    )
+    return pipeline
+
+
+def run_weather_forecast_pipeline():
+    """Run the complete weather data pipeline. Returns dlt LoadInfo."""
+    pipeline = create_weather_forecast_pipeline()
+    pipeline.sync_destination()  # Restore state from DuckDB
+    return pipeline.run([weather_forecast_source()])

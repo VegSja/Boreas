@@ -14,7 +14,25 @@ dependencies = [
     "pandas>=2.3.3",
     "requests>=2.32.5",
     "tqdm>=4.67.1",
+    "dagster>=1.11",
+    "dagster-webserver>=1.11",
+    "dagster-dbt>=0.27",
+    "dagster-dlt>=0.27",
+    "dagster-duckdb>=0.27",
+    "dagster-dg-cli>=1.13.14",
 ]
+
+[tool.dagster]
+module_name = "src.dagster_boreas.definitions"
+code_location_name = "boreas"
+
+[tool.dg]
+directory_type = "project"
+
+[tool.dg.project]
+root_module = "dagster_boreas"
+code_location_target_module = "src.dagster_boreas.definitions"
+code_location_name = "boreas"
 
 [project.optional-dependencies]
 dashboard = [
@@ -26,7 +44,7 @@ dashboard = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["src*", "dagster_boreas*", "dlt_boreas*"]
 
 [build-system]
 requires = ["setuptools>=61.0"]

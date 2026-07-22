@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "dagster-expert": {
+      "source": "dagster-io/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dagster-expert/skills/dagster-expert/SKILL.md",
+      "computedHash": "0de12b5fee0975ce5440efbea2f49016bfe6af3e6b0aba12a293bc03698939b4"
+    },
+    "dignified-python": {
+      "source": "dagster-io/skills",
+      "sourceType": "github",
+      "skillPath": "skills/dignified-python/skills/dignified-python/SKILL.md",
+      "computedHash": "af77280f19bc321a9456d4695f13e6b9d9822766a0faeff2e198acea375fd5b3"
+    }
+  }
+}

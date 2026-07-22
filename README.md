@@ -60,17 +60,46 @@ uv sync --extra dashboard
 
 ### Running the Data Pipeline
 
-1. **Configure DLT settings** (see `dlt/.dlt/config.toml`)
-2. **Run data ingestion**:
-   ```bash
-   cd dlt
-   uv run python run_dlt_pipelines.py
-   ```
-3. **Run dbt transformations**:
-   ```bash
-   cd dbt_boreas
-   uv run dbt run
-   ```
+The pipeline is orchestrated by **Dagster**. Both dlt ingestion and dbt
+transformations are exposed as Dagster assets in `dagster_boreas/`, wired
+together automatically via matching asset keys (`1_bronze/<table>` →
+`2_silver/*` → `3_gold/*`).
+
+**Launch the Dagster UI:**
+
+```bash
+uv run dg dev
+```
+
+Then open http://localhost:3000 and click *Materialize all* to run the full
+pipeline (dlt bronze → dbt silver → dbt gold). A daily schedule
+(`boreas_daily`, 05:00 Europe/Oslo) is defined but stopped by default —
+enable it from the *Automation* tab.
+
+**Run without the UI:**
+
+```bash
+# Materialize the entire graph
+uv run dg launch --assets "*"
+
+# Materialize just the dlt bronze layer
+uv run dg launch --assets "1_bronze/*"
+
+# List everything Dagster knows about
+uv run dg list defs
+```
+
+**Legacy standalone runs (still supported):**
+
+```bash
+# dlt pipelines directly
+uv run python -m dlt_boreas.run_dlt_pipelines
+
+# dbt from its project dir
+cd dbt_boreas && uv run dbt build
+```
+
+**Configuration:** dlt settings live in `dlt_boreas/.dlt/config.toml`.
 
 ### Launching the Dashboard
 
@@ -97,7 +126,8 @@ The dashboard will be available at `http://localhost:8501`
 
 ```
 Boreas/
-├── dlt/                    # Data ingestion (DLT)
+├── dagster_boreas/         # Dagster orchestration (assets, jobs, schedules)
+├── dlt_boreas/             # Data ingestion (DLT)
 │   ├── pipelines/         # Pipeline definitions
 │   ├── sources/           # Data source implementations
 │   └── utils/             # Shared utilities
@@ -132,9 +162,9 @@ Boreas/
 ## Development
 
 ### Adding New Data Sources
-1. Create source implementation in `dlt/sources/`
-2. Add pipeline in `dlt/pipelines/`
-3. Update `dlt/run_dlt_pipelines.py`
+1. Create source implementation in `dlt_boreas/sources/`
+2. Add pipeline in `dlt_boreas/pipelines/`
+3. Update `dlt_boreas/run_dlt_pipelines.py`
 4. Create corresponding dbt models
 
 ## Dashboard Features
@@ -148,7 +178,7 @@ Boreas/
 ## Configuration
 
 ### DLT Configuration
-- Configure API endpoints and credentials in `dlt/.dlt/config.toml`
+- Configure API endpoints and credentials in `dlt_boreas/.dlt/config.toml`
 - Adjust pipeline settings in individual pipeline files
 
 ### dbt Configuration
