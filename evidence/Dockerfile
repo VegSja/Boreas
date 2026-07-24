@@ -11,4 +11,5 @@ RUN --mount=type=bind,source=boreas.duckdb,target=/data/boreas.duckdb,ro \
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/build /usr/share/nginx/html
+COPY evidence/elementary /usr/share/nginx/html/elementary
 EXPOSE 80

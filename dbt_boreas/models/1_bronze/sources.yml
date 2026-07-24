@@ -5,7 +5,21 @@ sources:
     schema: 1_bronze
     tables:
       - name: weather_forecast
+        loaded_at_field: time
+        freshness:
+          warn_after: { count: 12, period: hour }
+          error_after: { count: 48, period: hour }
       - name: weather_historic
+        loaded_at_field: time
+        freshness:
+          warn_after: { count: 48, period: hour }
+          error_after: { count: 7, period: day }
       - name: weather_grids
       - name: avalanche_danger_levels
+        # ValidFrom is quoted upstream; dbt source freshness needs the
+        # exact column name as written by dlt.
+        loaded_at_field: '"ValidFrom"'
+        freshness:
+          warn_after: { count: 36, period: hour }
+          error_after: { count: 72, period: hour }
       - name: avalanche_regions

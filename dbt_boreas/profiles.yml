@@ -5,3 +5,11 @@ dbt_boreas:
       type: duckdb
       path: ../boreas.duckdb
       schema: 1_bronze
+
+elementary:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "{{ env_var('BOREAS_DUCKDB_PATH', '../boreas.duckdb') }}"
+      schema: elementary

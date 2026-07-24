@@ -5,7 +5,7 @@ description = "The dataplatform for the avalanche dataplatform Boreas"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "alive-progress>=3.3.0",
+    "alive-progress>=2.3.1",
     "dbt-core>=1.11.2",
     "dbt-duckdb>=1.10.0",
     "dlt[duckdb,workspace]>=1.20.0",
@@ -20,6 +20,7 @@ dependencies = [
     "dagster-dlt>=0.27",
     "dagster-duckdb>=0.27",
     "dagster-dg-cli>=1.13.14",
+    "elementary-data[duckdb]>=0.19.0",
 ]
 
 [tool.dagster]

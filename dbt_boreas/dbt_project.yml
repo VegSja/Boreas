@@ -23,3 +23,20 @@ models:
     3_gold:
       +materialized: table
       +schema: 3_gold
+  elementary:
+    +schema: elementary
+    +materialized: table
+
+# All elementary-generated tests emit warnings (not errors) so they surface
+# as WARN asset checks in Dagster without failing the pipeline.
+tests:
+  elementary:
+    +severity: warn
+
+vars:
+  # Where elementary stores its metadata models (relative to target schema).
+  # With dbt-duckdb this resolves to schema `elementary` inside boreas.duckdb.
+  elementary:
+    disable_dbt_invocation_autoupload: true
+    disable_dbt_artifacts_autoupload: true
+    disable_run_results: false

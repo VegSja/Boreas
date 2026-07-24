@@ -1,6 +1,0 @@
-[32m2026-07-22 12:01:22 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38361 - LOGS_CAPTURED - Capturing logs for process (pid: 38361).
-[32m2026-07-22 12:01:22 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38361 - 1_bronze__avalanche_regions - STEP_START - Started execution of step "1_bronze__avalanche_regions".
-[32m2026-07-22 12:01:22 +0200[0m - dagster - [34mINFO[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 1_bronze__avalanche_regions - Running regions dlt pipeline
-[32m2026-07-22 12:01:24 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38361 - 1_bronze__avalanche_regions - STEP_OUTPUT - Yielded output "result" of type "Any". (Type check passed).
-[32m2026-07-22 12:01:24 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38361 - 1_bronze__avalanche_regions - ASSET_MATERIALIZATION - Materialized value 1_bronze avalanche_regions.
-[32m2026-07-22 12:01:24 +0200[0m - dagster - [34mDEBUG[0m - __ASSET_JOB - 39098d02-e42d-462c-b9a0-8b0a5c6f2a6c - 38361 - 1_bronze__avalanche_regions - STEP_SUCCESS - Finished execution of step "1_bronze__avalanche_regions" in 1.56s.
