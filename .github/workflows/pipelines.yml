@@ -1,105 +1,109 @@
-name: Run dlt and dbt Pipelines
+name: Boreas pipeline
 
 on:
-  # schedule:
-  #   - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  schedule:
+    # 05:00 Europe/Oslo → 03:00 UTC (summer) / 04:00 UTC (winter).
+    # Cron in GH Actions is UTC-only, so we pick 04:00 UTC as a stable
+    # compromise. Adjust if you care about the exact local hour.
+    - cron: "0 4 * * *"
   workflow_dispatch:
 
+# Prevent overlapping runs from corrupting boreas.duckdb.
+concurrency:
+  group: boreas-pipeline
+  cancel-in-progress: false
+
 permissions:
-  id-token: write
-  contents: read
+  contents: write  # commit elementary report + publish release asset
+
+env:
+  # Rolling release that always holds the newest boreas.duckdb.
+  DATA_RELEASE_TAG: latest-data
 
 jobs:
-  run-pipelines:
+  run:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
-      
-      - name: Install UV
-        uses: astral-sh/setup-uv@v2
-      
-      - name: Install dependencies
-        run: uv sync
-      
-      - name: Azure Login (OIDC)
-        uses: azure/login@v1
+          python-version: "3.13"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      
-      - name: Download DuckDB from Blob Storage
-        run: |
-          az storage blob download \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
-            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
-            --name boreas.duckdb \
-            --file boreas.duckdb \
-            --no-progress || echo "DuckDB not found, creating new"
-      
-      - name: Run dlt Pipelines
-        continue-on-error: true
-        working-directory: dlt
-        run: uv run python run_dlt_pipelines.py
-      
-      - name: Upload DuckDB checkpoint after dlt
-        run: |
-          az storage blob upload \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
-            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
-            --name boreas.duckdb \
-            --file boreas.duckdb \
-            --overwrite
-      
-      - name: Download DuckDB checkpoint before dbt
-        run: |
-          az storage blob download \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
-            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
-            --name boreas.duckdb \
-            --file boreas.duckdb \
-            --overwrite \
-            --no-progress
-      
+          enable-cache: true
+
+      - name: Install Python deps
+        run: uv sync --frozen
+
       - name: Install dbt packages
         working-directory: dbt_boreas
-        run: |
-          uv run dbt deps
+        run: uv run dbt deps
 
-      - name: dbt debug
-        working-directory: dbt_boreas
+      - name: Download previous boreas.duckdb from release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          uv run dbt debug
+          if gh release view "$DATA_RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Fetching boreas.duckdb from release $DATA_RELEASE_TAG"
+            gh release download "$DATA_RELEASE_TAG" \
+              --pattern "boreas.duckdb" \
+              --output boreas.duckdb
+            ls -lh boreas.duckdb
+          else
+            echo "No release '$DATA_RELEASE_TAG' yet — pipeline will bootstrap a fresh DB."
+          fi
 
-      - name: Run dbt Transformations
-        working-directory: dbt_boreas
+      - name: Materialize all Dagster assets
+        env:
+          DAGSTER_HOME: ${{ github.workspace }}/.dagster_home
         run: |
-          uv run dbt build 
-      
-      - name: Upload DuckDB to Blob Storage
-        if: success()
+          mkdir -p "$DAGSTER_HOME"
+          uv run dg launch --assets "*"
+
+      - name: Show DuckDB size
+        run: ls -lh boreas.duckdb
+
+      - name: Publish boreas.duckdb to rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          az storage blob upload \
-            --account-name ${{ secrets.AZURE_STORAGE_ACCOUNT_NAME }} \
-            --account-key ${{ secrets.AZURE_STORAGE_ACCOUNT_KEY }} \
-            --container-name ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }} \
-            --name boreas.duckdb \
-            --file boreas.duckdb \
-            --overwrite
-      
-      - name: Notify on Failure
-        if: failure()
-        run: echo "Pipeline execution failed. Check logs above."
-      
-      - name: Azure Logout
+          # Create the release once, then just overwrite its asset each run.
+          if ! gh release view "$DATA_RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$DATA_RELEASE_TAG" \
+              --title "Latest Boreas warehouse" \
+              --notes "Rolling release. Asset boreas.duckdb is overwritten by each pipeline run." \
+              --latest=false
+          fi
+          gh release upload "$DATA_RELEASE_TAG" boreas.duckdb --clobber
+
+      - name: Commit elementary report
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add evidence/elementary || true
+
+          if git diff --cached --quiet; then
+            echo "No elementary changes to commit."
+            exit 0
+          fi
+
+          git commit -m "chore(data): refresh elementary report [skip ci]"
+          git push origin HEAD:${GITHUB_REF#refs/heads/}
+
+      - name: Upload elementary report as workflow artifact
         if: always()
-        run: az logout
+        uses: actions/upload-artifact@v4
+        with:
+          name: elementary-report
+          path: evidence/elementary/
+          if-no-files-found: warn

@@ -1,0 +1,50 @@
+name: Deploy Elementary report to GitHub Pages
+
+on:
+  # Auto-deploy after the pipeline commits a fresh report.
+  push:
+    branches: [master]
+    paths:
+      - "evidence/elementary/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+# Only one Pages deploy at a time; skip queued redundant runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify report exists
+        run: |
+          if [ ! -f evidence/elementary/index.html ]; then
+            echo "::error::evidence/elementary/index.html not found. Run the pipeline workflow first."
+            exit 1
+          fi
+          ls -lh evidence/elementary/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: evidence/elementary
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
