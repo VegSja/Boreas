@@ -23,10 +23,9 @@ import dagster as dg
 from src.dagster_boreas.assets.dbt_assets import dbt_boreas_assets, dbt_resource
 from src.dagster_boreas.assets.dlt_assets import dlt_bronze_assets
 from src.dagster_boreas.assets.elementary_assets import elementary_report
-from src.dagster_boreas.assets.evidence_assets import evidence_dashboard
 from src.dagster_boreas.resources import duckdb_resource
 
-all_assets = [*dlt_bronze_assets, dbt_boreas_assets, evidence_dashboard, elementary_report]
+all_assets = [*dlt_bronze_assets, dbt_boreas_assets, elementary_report]
 
 boreas_job = dg.define_asset_job(
     name="boreas_full_refresh",

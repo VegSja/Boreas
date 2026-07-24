@@ -4,57 +4,24 @@ models:
   - name: avalanche_per_region
     tests:
       - elementary.volume_anomalies:
-          time_bucket:
-            period: day
-            count: 1
+          time_bucket: {period: day, count: 1}
           timestamp_column: valid_from
-    columns:
-      - name: danger_level
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: valid_from
-              column_anomalies:
-                - null_count
-                - zero_count
-                - min
-                - max
-                - average
+      - elementary.dimension_anomalies:
+          timestamp_column: valid_from
+          dimensions: [region_id]
+      - elementary.dimension_anomalies:
+          timestamp_column: valid_from
+          dimensions: [danger_level]
+      - elementary.all_columns_anomalies:
+          timestamp_column: valid_from
+          column_anomalies: [null_count, zero_count, min, max, average, standard_deviation]
+          dimensions: [region_id]
 
   - name: weather_per_region
     tests:
       - elementary.volume_anomalies:
-          time_bucket:
-            period: day
-            count: 1
+          time_bucket: {period: day, count: 1}
           timestamp_column: date
-    columns:
-      - name: average_temperature
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
-      - name: average_snowfall
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
-      - name: average_snow_depth
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
-      - name: average_windspeed
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
-      - name: average_relative_humidity
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
-      - name: average_rain
-        tests:
-          - elementary.column_anomalies:
-              timestamp_column: date
-              column_anomalies: [null_count, min, max, average]
+      - elementary.dimension_anomalies:
+          timestamp_column: date
+          dimensions: [weather_type]

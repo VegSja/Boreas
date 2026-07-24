@@ -1,8 +1,11 @@
 services:
-  evidence:
+  streamlit:
     build:
       context: .
-      dockerfile: evidence/Dockerfile
+      dockerfile: streamlit_app/Dockerfile
     ports:
-      - "8080:80"
+      - "8501:8501"
+    volumes:
+      - ./boreas.duckdb:/app/boreas.duckdb:ro
+      - ./evidence:/app/streamlit_app/static/evidence:ro
     restart: unless-stopped

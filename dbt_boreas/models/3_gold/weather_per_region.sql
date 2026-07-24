@@ -54,6 +54,7 @@ daw_with_grid_info AS (
 
 SELECT 
     date,
+	grid_id,
 	max_temp,
 	average_temperature,
 	min_temp,

@@ -34,8 +34,15 @@ tests:
     +severity: warn
 
 vars:
-  # Where elementary stores its metadata models (relative to target schema).
-  # With dbt-duckdb this resolves to schema `elementary` inside boreas.duckdb.
+  days_back: 365
+  anomaly_sensitivity: 3
+  anomaly_seasonality: day_of_week
+  training_period:
+    period: day
+    count: 90
+  detection_period:
+    period: day
+    count: 7
   elementary:
     disable_dbt_invocation_autoupload: true
     disable_dbt_artifacts_autoupload: true

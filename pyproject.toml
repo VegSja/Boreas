@@ -21,6 +21,10 @@ dependencies = [
     "dagster-duckdb>=0.27",
     "dagster-dg-cli>=1.13.14",
     "elementary-data[duckdb]>=0.19.0",
+    "matplotlib>=3.9",
+    "streamlit>=1.38",
+    "pydeck>=0.9",
+    "altair>=5",
 ]
 
 [tool.dagster]

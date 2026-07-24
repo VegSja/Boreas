@@ -1,7 +1,0 @@
-node_modules/
-.evidence/
-build/
-static/data/
-sources/**/*.parquet
-sources/**/.metadata/
-.svelte-kit/

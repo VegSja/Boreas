@@ -21,6 +21,7 @@ from dlt_boreas.pipelines.avalanche_pipeline import run_avalanche_pipeline
 from dlt_boreas.pipelines.region_pipeline import run_regions_pipeline
 from dlt_boreas.pipelines.weather_forecast_pipeline import run_weather_forecast_pipeline
 from dlt_boreas.pipelines.weather_historic_pipeline import run_weather_historic_pipeline
+from src.dagster_boreas.assets._row_count_plot import rows_per_date_plot
 
 BRONZE = "1_bronze"
 AVALANCHE_GROUP = "avalanche_ingestion"
@@ -122,7 +123,13 @@ def weather_historic_bronze(
 
     yield dg.MaterializeResult(
         asset_key=dg.AssetKey([BRONZE, "weather_historic"]),
-        metadata={**shared, **_table_stats(duckdb, "weather_historic", ("time",))},
+        metadata={
+            **shared,
+            **_table_stats(duckdb, "weather_historic", ("time",)),
+            "rows_per_date": rows_per_date_plot(
+                duckdb, schema=BRONZE, table="weather_historic", date_column="time"
+            ),
+        },
     )
     yield dg.MaterializeResult(
         asset_key=dg.AssetKey([BRONZE, "weather_grids"]),
@@ -146,6 +153,9 @@ def weather_forecast(
         metadata={
             **_load_info_metadata(load_info),
             **_table_stats(duckdb, "weather_forecast", ("time",)),
+            "rows_per_date": rows_per_date_plot(
+                duckdb, schema=BRONZE, table="weather_forecast", date_column="time"
+            ),
         }
     )
 
@@ -167,6 +177,12 @@ def avalanche_danger_levels(
         metadata={
             **_load_info_metadata(load_info),
             **_table_stats(duckdb, "avalanche_danger_levels", ("ValidFrom", "ValidTo")),
+            "rows_per_date": rows_per_date_plot(
+                duckdb,
+                schema=BRONZE,
+                table="avalanche_danger_levels",
+                date_column="ValidFrom",
+            ),
         }
     )
 
