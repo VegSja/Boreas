@@ -1,10 +1,11 @@
-"""Boreas — Avalanche & Weather (Streamlit replacement for Evidence)."""
+"""Boreas — Avalanche & Weather Streamlit dashboard."""
 
 from __future__ import annotations
 
 import datetime as dt
 import json
 import time
+import urllib.request
 from pathlib import Path
 
 import duckdb
@@ -14,6 +15,14 @@ import streamlit as st
 
 DB_PATH = Path(__file__).resolve().parent.parent / "boreas.duckdb"
 GEOJSON_PATH = Path(__file__).resolve().parent / "assets" / "varsom_regions.geojson"
+
+# On Streamlit Community Cloud the repo does not contain boreas.duckdb — it
+# lives on the `latest-data` GitHub release. Download it once per container.
+DB_RELEASE_URL = (
+    "https://github.com/VegSja/Boreas/releases/download/latest-data/boreas.duckdb"
+)
+if not DB_PATH.exists():
+    urllib.request.urlretrieve(DB_RELEASE_URL, DB_PATH)
 
 DANGER_COLORS: dict[int, list[int]] = {
     1: [26, 152, 80],

@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir \
 
 COPY streamlit_app/ /app/streamlit_app/
 COPY .streamlit/ /app/.streamlit/
-RUN rm -f /app/streamlit_app/static/evidence
+RUN rm -f /app/streamlit_app/static/elementary
 
 EXPOSE 8501
 

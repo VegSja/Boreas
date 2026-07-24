@@ -1,14 +1,11 @@
 """Dagster asset that generates the Elementary data-observability HTML report.
 
-Runs after the gold-layer dbt models (which is where anomaly + volume tests
-live). Elementary reads its own metadata schema (``elementary`` in
-``boreas.duckdb``), which is populated as a side-effect of every ``dbt build``
-run via the ``elementary`` package's on-run-end hook.
-
-Writes a single self-contained ``index.html`` into ``evidence/elementary/``
-(deliberately NOT ``evidence/build/`` so the file survives ``npm run build``
-inside the Evidence Docker image, where it is then copied to
-``/usr/share/nginx/html/elementary/`` for serving at ``/elementary/``).
+Runs after the gold-layer dbt models (where anomaly + volume tests live).
+Elementary reads its own metadata schema (``elementary`` in ``boreas.duckdb``),
+populated as a side-effect of every ``dbt build`` via the elementary package's
+on-run-end hook. Output is a single self-contained ``evidence/elementary/index.html``
+that is (1) embedded by the Streamlit "Data quality" page and (2) deployed to
+GitHub Pages by ``.github/workflows/pages.yml``.
 """
 
 import os
@@ -37,8 +34,7 @@ GOLD_DEPS = [
     description=(
         "Elementary data-observability report (single HTML). Reads test "
         "results, freshness, and anomaly metrics from the `elementary` "
-        "schema in boreas.duckdb. Served in the nginx container at "
-        "/elementary/."
+        "schema in boreas.duckdb. Deployed to GitHub Pages by pages.yml."
     ),
 )
 def elementary_report(context: AssetExecutionContext) -> dg.MaterializeResult:
@@ -78,7 +74,7 @@ def elementary_report(context: AssetExecutionContext) -> dg.MaterializeResult:
             "report_path": dg.MetadataValue.path(str(report_path)),
             "size_kb": dg.MetadataValue.int(size_kb),
             "served_at": dg.MetadataValue.md(
-                "In Docker: `http://localhost:8080/elementary/`"
+                "GitHub Pages: `https://vegsja.github.io/Boreas/`"
             ),
         }
     )

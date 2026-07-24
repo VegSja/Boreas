@@ -7,8 +7,8 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-REPORT_PATH = Path(__file__).resolve().parent.parent / "static" / "evidence" / "elementary" / "index.html"
-REPORT_URL = "/static/evidence/elementary/index.html"
+REPORT_PATH = Path(__file__).resolve().parent.parent / "static" / "elementary" / "index.html"
+REPORT_URL = "/static/elementary/index.html"
 
 
 def main() -> None:

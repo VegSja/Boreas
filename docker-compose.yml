@@ -7,5 +7,5 @@ services:
       - "8501:8501"
     volumes:
       - ./boreas.duckdb:/app/boreas.duckdb:ro
-      - ./evidence:/app/streamlit_app/static/evidence:ro
+      - ./evidence/elementary:/app/streamlit_app/static/elementary:ro
     restart: unless-stopped
