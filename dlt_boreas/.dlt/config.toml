@@ -11,8 +11,7 @@ request_max_retry_delay = 120
 
 [sources.weather_historic.weather_historic_source]
 start_date = "2025-11-01T00:00"
-# end_date intentionally unset — source defaults to today, so daily runs
-# always extend the window forward.
+end_date = ""  # empty → source defaults to today; keeps daily runs rolling forward
 hourly_params = ["temperature_2m", "relative_humidity_2m", "snowfall", "rain", "snow_depth", "windspeed_10m"]
 timezone = "Europe/Oslo"
 archive_api_base_url = "https://archive-api.open-meteo.com/v1"
@@ -26,8 +25,7 @@ request_timeout = 30
 
 [sources.avalanche_warnings.avalanche_warning_source]
 start_date = "2025-11-01T00:00:00"
-# end_date intentionally unset — source caps at today + 4 days, so daily
-# runs always pick up the freshest warnings.
+end_date = ""  # empty → source caps at today + 4 days; keeps daily runs rolling forward
 language_key = "1"
 api_base_url = "https://api01.nve.no/hydrology/forecast/avalanche/v6.3.0/api"
 request_timeout = 30
