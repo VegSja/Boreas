@@ -15,6 +15,18 @@ _local
 .tmp_dagster_home_*/
 .omo/
 
+# Agent skills (installed from skills-lock.json)
+.agents/
+
+# Elementary CLI runtime output
+edr_target/
+
+# Empty query log dir
+logs/
+
+# dbt package concurrency lock (runtime artifact)
+*.concurrent-update-lock
+
 # Git repository
 .git/
 
